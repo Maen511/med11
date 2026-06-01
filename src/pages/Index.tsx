@@ -8,10 +8,15 @@ import ShinyText from '@/components/ShinyText';
 import HomeHeroYoutube from '@/components/HomeHeroYoutube';
 import { CheckCircle2 } from 'lucide-react';
 
+const MOBILE_HOME_MQ = '(max-width: 639px)';
+
 const Index = () => {
   const { language, setLanguage } = useLanguage();
   const [whyImageIndex, setWhyImageIndex] = useState(0);
   const [heroTextVisible, setHeroTextVisible] = useState(false);
+  const [isMobileHome, setIsMobileHome] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(MOBILE_HOME_MQ).matches : false,
+  );
   const heroTextTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const heroVideoLabel =
@@ -39,6 +44,14 @@ const Index = () => {
     return () => {
       if (heroTextTimerRef.current) clearTimeout(heroTextTimerRef.current);
     };
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_HOME_MQ);
+    const sync = () => setIsMobileHome(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
   }, []);
 
   useEffect(() => {
@@ -82,6 +95,16 @@ const Index = () => {
   ];
   const easeScroll = [0.22, 1, 0.36, 1] as const;
   const viewportScroll = { once: true, amount: 0.2, margin: '-64px 0px' } as const;
+  const viewportInstant = { once: true, amount: 0.01 } as const;
+
+  const sectionReveal = isMobileHome
+    ? { initial: false as const }
+    : {
+        initial: { opacity: 0, y: 56 },
+        whileInView: { opacity: 1, y: 0 },
+        viewport: viewportScroll,
+        transition: { duration: 0.85, ease: easeScroll },
+      };
 
   return (
     <div
@@ -91,28 +114,20 @@ const Index = () => {
       <Header language={language} onLanguageChange={setLanguage} />
       
       <motion.section
-        className="relative w-full max-w-full shrink-0 h-[100svh] overflow-hidden"
+        className="relative w-full max-w-full shrink-0 overflow-hidden h-[min(72svh,34rem)] sm:h-[100svh]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
       >
-        <div
-          className="absolute inset-0"
-          style={{
-            WebkitMaskImage:
-              'linear-gradient(to bottom, black 0%, black 91%, transparent 100%)',
-            maskImage:
-              'linear-gradient(to bottom, black 0%, black 91%, transparent 100%)',
-          }}
-        >
+        <div className="absolute inset-0 sm:[mask-image:linear-gradient(to_bottom,black_0%,black_91%,transparent_100%)] sm:[-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_91%,transparent_100%)]">
           <HomeHeroYoutube title={heroVideoLabel} />
         </div>
-        {/* Bottom vignette ~¼ viewport + soft fade (readability in light & dark) */}
+        {/* Bottom vignette — lighter on phone so no huge black band */}
         <div
-          className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(to_top,rgba(0,0,0,0.52)_0%,rgba(0,0,0,0.38)_min(14%,12vh),rgba(0,0,0,0.2)_min(24%,22vh),rgba(0,0,0,0.08)_min(34%,30vh),transparent_46%)] dark:bg-[linear-gradient(to_top,rgba(0,0,0,0.66)_0%,rgba(0,0,0,0.48)_min(14%,12vh),rgba(0,0,0,0.26)_min(24%,22vh),rgba(0,0,0,0.1)_min(34%,30vh),transparent_46%)]"
+          className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(to_top,rgba(0,0,0,0.35)_0%,transparent_55%)] sm:bg-[linear-gradient(to_top,rgba(0,0,0,0.52)_0%,rgba(0,0,0,0.38)_min(14%,12vh),rgba(0,0,0,0.2)_min(24%,22vh),rgba(0,0,0,0.08)_min(34%,30vh),transparent_46%)] dark:bg-[linear-gradient(to_top,rgba(0,0,0,0.5)_0%,transparent_55%)] sm:dark:bg-[linear-gradient(to_top,rgba(0,0,0,0.66)_0%,rgba(0,0,0,0.48)_min(14%,12vh),rgba(0,0,0,0.26)_min(24%,22vh),rgba(0,0,0,0.1)_min(34%,30vh),transparent_46%)]"
           aria-hidden
         />
-        <div className="relative z-10 flex h-full w-full max-w-full items-center pt-20 pb-8 sm:pt-24 sm:pb-10">
+        <div className="relative z-10 flex h-full w-full max-w-full items-end justify-center pb-10 pt-16 sm:items-center sm:pb-10 sm:pt-24">
           <div className="w-full max-w-full px-4 sm:px-6 md:px-10 text-center">
             <motion.div
               className="relative mb-6"
@@ -171,11 +186,8 @@ const Index = () => {
       </motion.section>
 
       <motion.section 
-        className="relative w-full max-w-full py-12 sm:py-16 md:py-20 bg-gradient-to-b from-background to-secondary/20 overflow-x-clip flex items-center"
-        initial={{ opacity: 0, y: 56 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.85, ease: easeScroll }}
-        viewport={viewportScroll}
+        className="relative w-full max-w-full py-10 sm:py-16 md:py-20 bg-gradient-to-b from-background to-secondary/20 overflow-x-clip flex items-center"
+        {...sectionReveal}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.45),transparent_38%),radial-gradient(circle_at_80%_70%,rgba(0,0,0,0.06),transparent_35%)]" />
         <div className="w-full px-3 sm:px-5 lg:px-6">
@@ -183,20 +195,22 @@ const Index = () => {
             <div className="text-center lg:text-start flex flex-col justify-center">
               <motion.h1 
                 className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extralight text-gradient mb-6 w-full max-w-full break-words ${language === 'ar' ? 'tracking-normal' : 'tracking-wider'}`}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
+                initial={isMobileHome ? false : { opacity: 0, scale: 0.8 }}
+                whileInView={isMobileHome ? undefined : { opacity: 1, scale: 1 }}
+                animate={isMobileHome ? { opacity: 1, scale: 1 } : undefined}
                 transition={{ duration: 1, delay: 0.2 }}
-                viewport={{ once: true }}
+                viewport={viewportInstant}
                 style={{fontFamily: "'Raleway', sans-serif"}}
               >
                 {language === 'en' ? 'BIO SKIN Product Line' : 'مجموعة منتجات BIO SKIN'}
               </motion.h1>
               <motion.p 
                 className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 font-light leading-relaxed"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={isMobileHome ? false : { opacity: 0, y: 30 }}
+                whileInView={isMobileHome ? undefined : { opacity: 1, y: 0 }}
+                animate={isMobileHome ? { opacity: 1, y: 0 } : undefined}
                 transition={{ duration: 0.8, delay: 0.4 }}
-                viewport={{ once: true }}
+                viewport={viewportInstant}
               >
                 {language === 'en'
                   ? 'Discover a complete range of cosmetic skincare solutions designed to support daily care, visible glow, and confident healthy-looking skin.'
@@ -228,10 +242,11 @@ const Index = () => {
               </div>
             </div>
             <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={isMobileHome ? false : { opacity: 0, x: 30 }}
+              whileInView={isMobileHome ? undefined : { opacity: 1, x: 0 }}
+              animate={isMobileHome ? { opacity: 1, x: 0 } : undefined}
               transition={{ duration: 0.7 }}
-              viewport={{ once: true }}
+              viewport={viewportInstant}
               className="relative h-full"
             >
               <img
@@ -247,10 +262,7 @@ const Index = () => {
 
       <motion.section
         className="relative w-full max-w-full py-10 md:py-14 bg-background flex items-center overflow-x-clip"
-        initial={{ opacity: 0, y: 56 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: easeScroll }}
-        viewport={viewportScroll}
+        {...sectionReveal}
       >
         <motion.img
           key={`why-bg-${whyImageIndex}`}
@@ -268,10 +280,11 @@ const Index = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10 items-stretch">
             <motion.div
               className="flex flex-col justify-center px-1 sm:px-2 md:px-4"
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={isMobileHome ? false : { opacity: 0, y: 40 }}
+              whileInView={isMobileHome ? undefined : { opacity: 1, y: 0 }}
+              animate={isMobileHome ? { opacity: 1, y: 0 } : undefined}
               transition={{ duration: 0.75, ease: easeScroll }}
-              viewport={viewportScroll}
+              viewport={viewportInstant}
             >
               <p className="inline-flex w-fit items-center rounded-full border border-primary/30 bg-background/75 px-4 py-1.5 text-xs md:text-sm font-semibold text-primary mb-4">
                 {language === 'en' ? 'Therapeutic Beauty, Smarter Care' : 'تجميل علاجي بعناية أذكى'}
@@ -296,10 +309,11 @@ const Index = () => {
 
             <motion.div
               className="relative h-full"
-              initial={{ opacity: 0, y: 44 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={isMobileHome ? false : { opacity: 0, y: 44 }}
+              whileInView={isMobileHome ? undefined : { opacity: 1, y: 0 }}
+              animate={isMobileHome ? { opacity: 1, y: 0 } : undefined}
               transition={{ duration: 0.8, delay: 0.1, ease: easeScroll }}
-              viewport={viewportScroll}
+              viewport={viewportInstant}
             >
               <div className="relative h-[340px] sm:h-[460px] md:h-[620px] lg:h-full lg:min-h-[680px] rounded-2xl border border-white/20 overflow-hidden shadow-2xl">
                 <motion.img
