@@ -15,6 +15,9 @@ dist
 *.mov
 *.avi
 public/VED/
+public/mobile-*.jpg
+public/**/Gemini_*.png
+public/**/ChatGPT*.png
 dist-ssr
 .env
 .env.*
