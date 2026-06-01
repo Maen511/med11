@@ -28,7 +28,18 @@ const Footer = () => {
     location.pathname.startsWith('/products/') || /^\/product\/[^/]+$/.test(location.pathname);
   const layoutDir = isCatalogLayout ? 'ltr' : language === 'ar' ? 'rtl' : 'ltr';
   const reduceMotion = useReducedMotion();
+  const [isMobileFooter, setIsMobileFooter] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 639px)').matches : false,
+  );
   const [content, setContent] = useState<FooterContent>(() => withSyncedEnglish(getFooterContent()));
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    const sync = () => setIsMobileFooter(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
 
   const reload = useCallback(() => setContent(withSyncedEnglish(getFooterContent())), []);
 
@@ -46,7 +57,9 @@ const Footer = () => {
 
   const viewport = { once: true, margin: '-40px' as const };
 
-  const columnsMotion = reduceMotion
+  const lightMotion = reduceMotion || isMobileFooter;
+
+  const columnsMotion = lightMotion
     ? {}
     : {
         initial: 'hidden',
@@ -58,7 +71,7 @@ const Footer = () => {
         },
       };
 
-  const colMotion = reduceMotion
+  const colMotion = lightMotion
     ? {}
     : {
         variants: {
@@ -71,7 +84,7 @@ const Footer = () => {
         },
       };
 
-  const rowMotion = reduceMotion
+  const rowMotion = lightMotion
     ? {}
     : {
         variants: {
@@ -80,7 +93,7 @@ const Footer = () => {
         },
       };
 
-  const fadeUp = reduceMotion
+  const fadeUp = lightMotion
     ? {}
     : {
         initial: { opacity: 0, y: 20 },
