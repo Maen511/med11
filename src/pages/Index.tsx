@@ -5,15 +5,14 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BlurText from '@/components/BlurText';
 import ShinyText from '@/components/ShinyText';
+import HomeHeroVideo from '@/components/HomeHeroVideo';
 import { CheckCircle2 } from 'lucide-react';
 
 const Index = () => {
   const { language, setLanguage } = useLanguage();
   const [whyImageIndex, setWhyImageIndex] = useState(0);
   const [heroTextVisible, setHeroTextVisible] = useState(false);
-  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
   const heroTextTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const heroLoopCheckRef = useRef(0);
 
   const showHeroTextAfterDelay = () => {
     if (heroTextTimerRef.current) clearTimeout(heroTextTimerRef.current);
@@ -21,27 +20,6 @@ const Index = () => {
     heroTextTimerRef.current = setTimeout(() => {
       setHeroTextVisible(true);
     }, 4000);
-  };
-
-  // Loop the hero video back to start at 85 seconds (throttled — avoids per-frame main-thread work).
-  const handleHeroTimeUpdate = () => {
-    const now = performance.now();
-    if (now - heroLoopCheckRef.current < 250) return;
-    heroLoopCheckRef.current = now;
-
-    const LOOP_AT_SECONDS = 85;
-    const v = heroVideoRef.current;
-    if (!v) return;
-    if (v.currentTime >= LOOP_AT_SECONDS) {
-      try {
-        v.currentTime = 0;
-        showHeroTextAfterDelay();
-        const p = v.play();
-        if (p && typeof (p as Promise<void>).catch === 'function') void p.catch(() => {});
-      } catch {
-        /* ignore */
-      }
-    }
   };
 
   useLayoutEffect(() => {
@@ -121,18 +99,7 @@ const Index = () => {
               'linear-gradient(to bottom, black 0%, black 91%, transparent 100%)',
           }}
         >
-          <video
-            ref={heroVideoRef}
-            className="absolute inset-0 h-full w-full object-cover object-top pointer-events-none transform-gpu"
-            src="/VED/Video%20Project.mp4"
-            autoPlay
-            muted
-            playsInline
-            preload="metadata"
-            onTimeUpdate={handleHeroTimeUpdate}
-            aria-label="Cosmetic dermatology skincare background video"
-          />
-          <div className="pointer-events-none absolute inset-0 bg-black/6 dark:bg-black/10" aria-hidden />
+          <HomeHeroVideo />
         </div>
         {/* Bottom vignette ~¼ viewport + soft fade (readability in light & dark) */}
         <div
