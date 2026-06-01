@@ -7,9 +7,7 @@ type Props = {
   className?: string;
 };
 
-/**
- * YouTube hero background — full-bleed on mobile (no 100vw overflow), iOS autoplay-safe.
- */
+/** YouTube hero — clipped to parent; never expands document width on mobile. */
 export default function HomeHeroYoutube({ title, className }: Props) {
   const [embedSrc, setEmbedSrc] = useState(() =>
     homeHeroYoutubeEmbedUrl(HOME_HERO_YOUTUBE_ID),
@@ -20,12 +18,7 @@ export default function HomeHeroYoutube({ title, className }: Props) {
   }, []);
 
   return (
-    <div
-      className={cn(
-        'absolute inset-0 overflow-hidden bg-black [container-type:size]',
-        className,
-      )}
-    >
+    <div className={cn('absolute inset-0 isolate overflow-hidden bg-black', className)}>
       <iframe
         className="hero-youtube-iframe pointer-events-none absolute left-1/2 top-1/2 border-0"
         src={embedSrc}
@@ -35,7 +28,6 @@ export default function HomeHeroYoutube({ title, className }: Props) {
         allowFullScreen={false}
         loading="eager"
       />
-      <div className="pointer-events-none absolute inset-0 z-[1]" aria-hidden />
     </div>
   );
 }

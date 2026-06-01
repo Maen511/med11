@@ -84,11 +84,14 @@ const Index = () => {
   const viewportScroll = { once: true, amount: 0.2, margin: '-64px 0px' } as const;
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-background" dir={language === 'ar' ? 'rtl' : 'ltr'} style={{ overflowAnchor: 'none' }}>
+    <div
+      className="flex w-full max-w-[100%] flex-col overflow-x-clip bg-background"
+      dir={language === 'ar' ? 'rtl' : 'ltr'}
+    >
       <Header language={language} onLanguageChange={setLanguage} />
       
       <motion.section
-        className="relative w-full h-[100dvh] min-h-[100svh] max-h-[100dvh] overflow-hidden"
+        className="relative w-full max-w-full shrink-0 h-[100svh] overflow-hidden"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
@@ -109,8 +112,8 @@ const Index = () => {
           className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(to_top,rgba(0,0,0,0.52)_0%,rgba(0,0,0,0.38)_min(14%,12vh),rgba(0,0,0,0.2)_min(24%,22vh),rgba(0,0,0,0.08)_min(34%,30vh),transparent_46%)] dark:bg-[linear-gradient(to_top,rgba(0,0,0,0.66)_0%,rgba(0,0,0,0.48)_min(14%,12vh),rgba(0,0,0,0.26)_min(24%,22vh),rgba(0,0,0,0.1)_min(34%,30vh),transparent_46%)]"
           aria-hidden
         />
-        <div className="relative z-10 flex h-full w-full items-center pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-          <div className="w-full px-4 sm:px-6 md:px-10 text-center">
+        <div className="relative z-10 flex h-full w-full max-w-full items-center pt-20 pb-8 sm:pt-24 sm:pb-10">
+          <div className="w-full max-w-full px-4 sm:px-6 md:px-10 text-center">
             <motion.div
               className="relative mb-6"
               initial={false}
@@ -168,7 +171,7 @@ const Index = () => {
       </motion.section>
 
       <motion.section 
-        className="relative min-h-[100svh] py-14 sm:py-16 md:py-20 bg-gradient-to-b from-background to-secondary/20 overflow-hidden flex items-center"
+        className="relative w-full max-w-full py-12 sm:py-16 md:py-20 bg-gradient-to-b from-background to-secondary/20 overflow-x-clip flex items-center"
         initial={{ opacity: 0, y: 56 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.85, ease: easeScroll }}
@@ -243,7 +246,7 @@ const Index = () => {
       </motion.section>
 
       <motion.section
-        className="relative min-h-[100svh] py-10 md:py-12 bg-background flex items-center overflow-hidden"
+        className="relative w-full max-w-full py-10 md:py-14 bg-background flex items-center overflow-x-clip"
         initial={{ opacity: 0, y: 56 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: easeScroll }}
@@ -262,7 +265,7 @@ const Index = () => {
         <div className="pointer-events-none absolute inset-0 bg-background/65" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(0,0,0,0.06),transparent_30%),radial-gradient(circle_at_10%_90%,rgba(255,255,255,0.5),transparent_35%)]" />
         <div className="w-full px-3 sm:px-5 lg:px-6 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10 items-stretch md:min-h-[700px]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10 items-stretch">
             <motion.div
               className="flex flex-col justify-center px-1 sm:px-2 md:px-4"
               initial={{ opacity: 0, y: 40 }}
