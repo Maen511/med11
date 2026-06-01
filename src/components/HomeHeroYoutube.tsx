@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { HOME_HERO_YOUTUBE_ID, homeHeroYoutubeEmbedUrl } from '@/lib/branding';
 import { cn } from '@/lib/utils';
 
@@ -6,17 +7,23 @@ type Props = {
   className?: string;
 };
 
-const embedSrc =
-  typeof window !== 'undefined'
-    ? homeHeroYoutubeEmbedUrl(HOME_HERO_YOUTUBE_ID, window.location.origin)
-    : homeHeroYoutubeEmbedUrl(HOME_HERO_YOUTUBE_ID);
-
-/** Full-bleed YouTube hero — works on static hosting (no local MP4 required). */
+/**
+ * Hero background from YouTube only ({@link HOME_HERO_YOUTUBE_WATCH_URL}).
+ * No local MP4 — works on GitHub Pages and static hosting.
+ */
 export default function HomeHeroYoutube({ title, className }: Props) {
+  const [embedSrc, setEmbedSrc] = useState(() =>
+    homeHeroYoutubeEmbedUrl(HOME_HERO_YOUTUBE_ID),
+  );
+
+  useEffect(() => {
+    setEmbedSrc(homeHeroYoutubeEmbedUrl(HOME_HERO_YOUTUBE_ID, window.location.origin));
+  }, []);
+
   return (
     <div className={cn('absolute inset-0 overflow-hidden bg-black', className)}>
       <iframe
-        className="pointer-events-none absolute left-1/2 top-1/2 min-h-full min-w-full border-0 opacity-100"
+        className="pointer-events-none absolute left-1/2 top-1/2 min-h-full min-w-full border-0"
         style={{
           width: '100vw',
           height: '56.25vw',
