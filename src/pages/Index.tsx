@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BlurText from '@/components/BlurText';
 import ShinyText from '@/components/ShinyText';
-import HomeHeroVideo from '@/components/HomeHeroVideo';
+import HomeHeroYoutube from '@/components/HomeHeroYoutube';
 import { CheckCircle2 } from 'lucide-react';
 
 const Index = () => {
@@ -13,6 +13,9 @@ const Index = () => {
   const [whyImageIndex, setWhyImageIndex] = useState(0);
   const [heroTextVisible, setHeroTextVisible] = useState(false);
   const heroTextTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const heroVideoLabel =
+    language === 'ar' ? 'فيديو خلفية العناية بالبشرة' : 'Skincare hero background video';
 
   const showHeroTextAfterDelay = () => {
     if (heroTextTimerRef.current) clearTimeout(heroTextTimerRef.current);
@@ -99,7 +102,7 @@ const Index = () => {
               'linear-gradient(to bottom, black 0%, black 91%, transparent 100%)',
           }}
         >
-          <HomeHeroVideo />
+          <HomeHeroYoutube title={heroVideoLabel} />
         </div>
         {/* Bottom vignette ~¼ viewport + soft fade (readability in light & dark) */}
         <div
