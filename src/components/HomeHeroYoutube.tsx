@@ -8,8 +8,7 @@ type Props = {
 };
 
 /**
- * Hero background from YouTube only ({@link HOME_HERO_YOUTUBE_WATCH_URL}).
- * No local MP4 — works on GitHub Pages and static hosting.
+ * YouTube hero background — full-bleed on mobile (no 100vw overflow), iOS autoplay-safe.
  */
 export default function HomeHeroYoutube({ title, className }: Props) {
   const [embedSrc, setEmbedSrc] = useState(() =>
@@ -21,27 +20,22 @@ export default function HomeHeroYoutube({ title, className }: Props) {
   }, []);
 
   return (
-    <div className={cn('absolute inset-0 overflow-hidden bg-black', className)}>
+    <div
+      className={cn(
+        'absolute inset-0 overflow-hidden bg-black [container-type:size]',
+        className,
+      )}
+    >
       <iframe
-        className="pointer-events-none absolute left-1/2 top-1/2 min-h-full min-w-full border-0"
-        style={{
-          width: '100vw',
-          height: '56.25vw',
-          minHeight: '100vh',
-          minWidth: '177.78vh',
-          transform: 'translate(-50%, -50%)',
-        }}
+        className="hero-youtube-iframe pointer-events-none absolute left-1/2 top-1/2 border-0"
         src={embedSrc}
         title={title}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         referrerPolicy="strict-origin-when-cross-origin"
         allowFullScreen={false}
+        loading="eager"
       />
-      <div
-        className="absolute inset-0 z-[1] touch-none"
-        aria-hidden
-        onContextMenu={(e) => e.preventDefault()}
-      />
+      <div className="pointer-events-none absolute inset-0 z-[1]" aria-hidden />
     </div>
   );
 }

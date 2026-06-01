@@ -88,7 +88,7 @@ const Index = () => {
       <Header language={language} onLanguageChange={setLanguage} />
       
       <motion.section
-        className="relative w-full h-[100svh] min-h-[100svh] overflow-hidden"
+        className="relative w-full h-[100dvh] min-h-[100svh] max-h-[100dvh] overflow-hidden"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
@@ -109,7 +109,7 @@ const Index = () => {
           className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(to_top,rgba(0,0,0,0.52)_0%,rgba(0,0,0,0.38)_min(14%,12vh),rgba(0,0,0,0.2)_min(24%,22vh),rgba(0,0,0,0.08)_min(34%,30vh),transparent_46%)] dark:bg-[linear-gradient(to_top,rgba(0,0,0,0.66)_0%,rgba(0,0,0,0.48)_min(14%,12vh),rgba(0,0,0,0.26)_min(24%,22vh),rgba(0,0,0,0.1)_min(34%,30vh),transparent_46%)]"
           aria-hidden
         />
-        <div className="relative z-10 h-full w-full flex items-center">
+        <div className="relative z-10 flex h-full w-full items-center pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
           <div className="w-full px-4 sm:px-6 md:px-10 text-center">
             <motion.div
               className="relative mb-6"

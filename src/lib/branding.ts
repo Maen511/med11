@@ -13,6 +13,7 @@ export function homeHeroYoutubeEmbedUrl(
     autoplay: '1',
     mute: '1',
     controls: '0',
+    /** Required for iOS inline autoplay */
     playsinline: '1',
     loop: '1',
     playlist: videoId,
