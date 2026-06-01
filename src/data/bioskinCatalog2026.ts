@@ -1,9 +1,9 @@
 import type { CatalogProduct, CatalogSection } from '@/lib/catalog';
-import { getProductPlaceholderImage } from '@/lib/productPlaceholders';
+import { getBioskinProductImage } from '@/lib/bioskinProductImages';
 import { parseUnitsPerBoxFromPresentation } from '@/lib/productSaleModes';
 
 /** Bump to re-apply price list from PDF across all browsers */
-export const BIOSKIN_CATALOG_VERSION = 'bioskin-price-list-2026-v1';
+export const BIOSKIN_CATALOG_VERSION = 'bioskin-price-list-2026-v2-images';
 
 type Row = {
   id: number;
@@ -456,7 +456,7 @@ function rowToProduct(row: Row): CatalogProduct {
     subtitle: { en: row.presentationEn, ar: row.presentationAr },
     description: { en: descEn, ar: descAr },
     price: row.price,
-    image: getProductPlaceholderImage(row.id),
+    image: getBioskinProductImage(row.code),
     rating: 5,
     category: row.category,
     stockCount: 20,
