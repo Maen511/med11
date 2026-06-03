@@ -88,7 +88,7 @@ function ExtraPhoneField({
       </Label>
       <div className="flex" dir="ltr">
         <span className="inline-flex shrink-0 items-center rounded-s-md border border-e-0 border-border/70 bg-muted/40 px-3 font-mono text-sm font-medium">
-          +962 7
+          +962
         </span>
         <Input
           id={id}
@@ -98,12 +98,12 @@ function ExtraPhoneField({
           value={value}
           onChange={(e) => onChange(sanitizeJordanLocalDigits(e.target.value))}
           maxLength={JORDAN_PHONE_LOCAL_LENGTH}
-          placeholder="1234567"
+          placeholder="791234567"
           className="rounded-s-none font-mono tracking-wide"
         />
       </div>
       <p className="text-[0.7rem] text-muted-foreground">
-        {language === 'ar' ? 'اختياري — 7 أرقام' : 'Optional — 7 digits'}
+        {language === 'ar' ? 'اختياري — 9 أرقام' : 'Optional — 9 digits'}
       </p>
     </div>
   );

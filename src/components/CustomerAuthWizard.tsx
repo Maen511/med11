@@ -163,8 +163,8 @@ const CustomerAuthWizard = ({
     if (!isValidJordanLocalPhone(phone)) {
       toast.error(
         language === 'ar'
-          ? `أدخل ${JORDAN_PHONE_LOCAL_LENGTH} أرقام بعد مفتاح الأردن (+962 7).`
-          : `Enter ${JORDAN_PHONE_LOCAL_LENGTH} digits after Jordan code (+962 7).`,
+          ? `أدخل ${JORDAN_PHONE_LOCAL_LENGTH} أرقام تبدأ بـ 7 (مثال: 791234567).`
+          : `Enter ${JORDAN_PHONE_LOCAL_LENGTH} digits starting with 7 (e.g. 791234567).`,
       );
       return;
     }
@@ -379,7 +379,7 @@ const CustomerAuthWizard = ({
                 )}
                 aria-hidden
               >
-                +962 7
+                +962
               </span>
               <Input
                 id="wiz-phone"
@@ -388,7 +388,7 @@ const CustomerAuthWizard = ({
                 pattern="[0-9]*"
                 autoComplete="tel-national"
                 value={phone}
-                onChange={(e) => onPhoneChange(e.target.value)}
+                onChange={(e) => onPhoneChange(sanitizeJordanLocalDigits(e.target.value))}
                 onKeyDown={(e) => {
                   const nav = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
                   if (nav.includes(e.key) || e.ctrlKey || e.metaKey) return;
@@ -396,16 +396,10 @@ const CustomerAuthWizard = ({
                 }}
                 onPaste={(e) => {
                   e.preventDefault();
-                  const pasted = e.clipboardData.getData('text');
-                  const digits = pasted.replace(/\D/g, '');
-                  if (digits.startsWith('9627')) onPhoneChange(digits.slice(4));
-                  else if (digits.startsWith('07')) onPhoneChange(digits.slice(2));
-                  else if (digits.startsWith('7') && digits.length > JORDAN_PHONE_LOCAL_LENGTH) {
-                    onPhoneChange(digits.slice(1));
-                  } else onPhoneChange(digits);
+                  onPhoneChange(sanitizeJordanLocalDigits(e.clipboardData.getData('text')));
                 }}
                 maxLength={JORDAN_PHONE_LOCAL_LENGTH}
-                placeholder="1234567"
+                placeholder="791234567"
                 dir="ltr"
                 className={cn(
                   inputBase(embedded, dark, 'rounded-s-none ps-3 font-mono tracking-wide'),
@@ -420,8 +414,8 @@ const CustomerAuthWizard = ({
               className={cn('text-start text-[0.7rem]', dark ? 'text-zinc-500' : 'text-muted-foreground')}
             >
               {language === 'ar'
-                ? `${JORDAN_PHONE_LOCAL_LENGTH} أرقام فقط بعد +962 7`
-                : `${JORDAN_PHONE_LOCAL_LENGTH} digits only after +962 7`}
+                ? `${JORDAN_PHONE_LOCAL_LENGTH} أرقام (تبدأ بـ 7) بعد +962`
+                : `${JORDAN_PHONE_LOCAL_LENGTH} digits (start with 7) after +962`}
             </p>
           </div>
         </AuthSection>

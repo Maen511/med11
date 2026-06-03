@@ -81,7 +81,7 @@ function ExtraPhoneRow({
       </Label>
       <div className="flex" dir="ltr">
         <span className="inline-flex shrink-0 items-center rounded-s-md border border-e-0 border-border/70 bg-muted/50 px-2.5 font-mono text-xs font-medium text-muted-foreground">
-          +962 7
+          +962
         </span>
         <Input
           id={id}
@@ -90,7 +90,7 @@ function ExtraPhoneRow({
           value={value}
           onChange={(e) => onChange(sanitizeJordanLocalDigits(e.target.value))}
           maxLength={JORDAN_PHONE_LOCAL_LENGTH}
-          placeholder="1234567"
+          placeholder="791234567"
           className={cn(fieldClass, 'rounded-s-none font-mono text-sm')}
         />
       </div>
