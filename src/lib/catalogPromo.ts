@@ -1,6 +1,39 @@
 export const CATALOG_PROMO_KEY = 'med-catalog-promo';
 export const CATALOG_PROMO_CHANGED = 'med-catalog-promo-changed';
 const DISMISS_PREFIX = 'med-catalog-promo-dismissed:';
+/** Legacy timed dismiss (other pages); homepage uses session dismiss only. */
+export const CATALOG_PROMO_DISMISS_MS = 6 * 60 * 60 * 1000;
+
+const HOME_DISMISS_PREFIX = 'med-catalog-promo-home-dismissed:';
+
+function homeDismissStorageKey(userId: string): string {
+  return `${HOME_DISMISS_PREFIX}${userId}`;
+}
+
+/** Hide promo for current homepage visit only — returns on next visit to `/`. */
+export function isCatalogPromoDismissedForHomeVisit(userId: string): boolean {
+  try {
+    return sessionStorage.getItem(homeDismissStorageKey(userId)) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function dismissCatalogPromoForHomeVisit(userId: string): void {
+  try {
+    sessionStorage.setItem(homeDismissStorageKey(userId), '1');
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearCatalogPromoHomeVisitDismiss(userId: string): void {
+  try {
+    sessionStorage.removeItem(homeDismissStorageKey(userId));
+  } catch {
+    /* ignore */
+  }
+}
 
 export type CatalogPromoConfig = {
   enabled: boolean;
@@ -66,9 +99,28 @@ export function getCatalogPromoFingerprint(config: CatalogPromoConfig): string {
   return `${config.enabled ? 1 : 0}:${config.productId ?? 'auto'}:${config.useCustomImage ? 1 : 0}`;
 }
 
+function dismissStorageKey(config: CatalogPromoConfig): string {
+  return `${DISMISS_PREFIX}${getCatalogPromoFingerprint(config)}`;
+}
+
 export function isCatalogPromoDismissed(config: CatalogPromoConfig): boolean {
   try {
-    return localStorage.getItem(`${DISMISS_PREFIX}${getCatalogPromoFingerprint(config)}`) === '1';
+    const raw = localStorage.getItem(dismissStorageKey(config));
+    if (!raw) return false;
+    if (raw === '1') {
+      localStorage.removeItem(dismissStorageKey(config));
+      return false;
+    }
+    const dismissedAt = Number(raw);
+    if (!Number.isFinite(dismissedAt)) {
+      localStorage.removeItem(dismissStorageKey(config));
+      return false;
+    }
+    if (Date.now() - dismissedAt >= CATALOG_PROMO_DISMISS_MS) {
+      localStorage.removeItem(dismissStorageKey(config));
+      return false;
+    }
+    return true;
   } catch {
     return false;
   }
@@ -76,7 +128,7 @@ export function isCatalogPromoDismissed(config: CatalogPromoConfig): boolean {
 
 export function dismissCatalogPromo(config: CatalogPromoConfig): void {
   try {
-    localStorage.setItem(`${DISMISS_PREFIX}${getCatalogPromoFingerprint(config)}`, '1');
+    localStorage.setItem(dismissStorageKey(config), String(Date.now()));
   } catch {
     /* ignore */
   }
