@@ -23,6 +23,7 @@ export function homeHeroYoutubeEmbedUrl(
     disablekb: '1',
     fs: '0',
     cc_load_policy: '0',
+    showinfo: '0',
     vq: 'hd1080',
   });
   if (origin) {
