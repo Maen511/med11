@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CategoryNavItem } from '@/lib/categoryNav';
+import { cn } from '@/lib/utils';
 
 type Props = {
   language: 'en' | 'ar';
@@ -9,11 +10,23 @@ type Props = {
   currentCategoryId?: string | null;
   /** شريط داكن متصل بالهيدر (صفحة المنتجات) */
   tone?: 'default' | 'merged';
+  /** Store `/products/:id` sticky bar — horizontal scroll, snap, short labels on phones */
+  variant?: 'default' | 'store';
 };
 
-const CategoryBar = ({ language, categories, onSelect, currentCategoryId, tone = 'default' }: Props) => {
+const NARROW_MQ = '(max-width: 767px)';
+
+const CategoryBar = ({
+  language,
+  categories,
+  onSelect,
+  currentCategoryId,
+  tone = 'default',
+  variant = 'default',
+}: Props) => {
   const embedded = Boolean(onSelect);
   const merged = tone === 'merged';
+  const isStore = variant === 'store';
   const defaultActive = categories[0]?.id ?? 'packages';
   const [active, setActive] = useState(() =>
     embedded
@@ -22,15 +35,32 @@ const CategoryBar = ({ language, categories, onSelect, currentCategoryId, tone =
         : defaultActive
       : defaultActive,
   );
+  const [isNarrow, setIsNarrow] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(NARROW_MQ).matches : false,
+  );
   const listRef = useRef<HTMLDivElement | null>(null);
   const scrollRafRef = useRef(0);
   const activeIdRef = useRef(active);
 
   const getHeaderOffset = () => {
     const w = typeof window !== 'undefined' ? window.innerWidth : 1024;
-    const stickyTopPx = w >= 768 ? 96 : 80;
-    return stickyTopPx + 48;
+    const stickyTopPx = w >= 768 ? 96 : 76;
+    return stickyTopPx + (isStore ? 52 : 48);
   };
+
+  const labelFor = (c: CategoryNavItem) => {
+    const useShort = isNarrow && c.shortLabel;
+    const pack = useShort ? c.shortLabel! : c.label;
+    return language === 'en' ? pack.en : pack.ar;
+  };
+
+  useEffect(() => {
+    const mq = window.matchMedia(NARROW_MQ);
+    const sync = () => setIsNarrow(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
 
   useEffect(() => {
     if (!embedded || !currentCategoryId) return;
@@ -40,21 +70,28 @@ const CategoryBar = ({ language, categories, onSelect, currentCategoryId, tone =
     }
   }, [embedded, currentCategoryId, categories]);
 
+  const scrollActiveIntoView = (id: string, behavior: ScrollBehavior = 'smooth') => {
+    const btn = document.getElementById(`cat-btn-${id}`);
+    if (btn && listRef.current) {
+      btn.scrollIntoView({ behavior, inline: 'center', block: 'nearest' });
+    }
+  };
+
   useLayoutEffect(() => {
     if (!listRef.current) return;
+    if (embedded && currentCategoryId) {
+      scrollActiveIntoView(currentCategoryId, 'auto');
+      return;
+    }
     listRef.current.scrollLeft = 0;
     if (embedded) return;
     const firstId = categories[0]?.id;
     if (!firstId) return;
-    const firstBtn = document.getElementById(`cat-btn-${firstId}`);
-    if (firstBtn) {
-      firstBtn.scrollIntoView({ behavior: 'auto', inline: 'start', block: 'nearest' });
-      requestAnimationFrame(() => {
-        if (listRef.current) listRef.current.scrollLeft = 0;
-        firstBtn.scrollIntoView({ behavior: 'auto', inline: 'start', block: 'nearest' });
-      });
-    }
-  }, [embedded, categories]);
+    scrollActiveIntoView(firstId, 'auto');
+    requestAnimationFrame(() => {
+      if (listRef.current) listRef.current.scrollLeft = 0;
+    });
+  }, [embedded, categories, currentCategoryId]);
 
   useEffect(() => {
     if (embedded) return;
@@ -92,16 +129,16 @@ const CategoryBar = ({ language, categories, onSelect, currentCategoryId, tone =
       window.removeEventListener('resize', handler);
       if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
     };
-  }, [embedded, categories, defaultActive]);
+  }, [embedded, categories, defaultActive, isStore]);
 
   useEffect(() => {
-    if (embedded) return;
-    activeIdRef.current = active;
-    const btn = document.getElementById(`cat-btn-${active}`);
-    if (btn && listRef.current) {
-      btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    if (embedded) {
+      if (currentCategoryId) scrollActiveIntoView(currentCategoryId);
+      return;
     }
-  }, [active, embedded]);
+    activeIdRef.current = active;
+    scrollActiveIntoView(active);
+  }, [active, embedded, currentCategoryId]);
 
   const scrollTo = (id: string) => {
     if (onSelect) {
@@ -119,16 +156,22 @@ const CategoryBar = ({ language, categories, onSelect, currentCategoryId, tone =
 
   return (
     <div
-      className={
-        merged
-          ? 'rounded-xl border border-white/15 bg-white/5 px-2 py-1.5'
-          : 'rounded-xl border border-border/60 bg-muted/50 px-2 py-1.5 dark:border-border/50 dark:bg-muted/30'
-      }
+      className={cn(
+        isStore
+          ? 'store-category-bar w-full min-w-0 rounded-xl border border-border/50 bg-background/95 shadow-sm backdrop-blur-sm dark:bg-background/90'
+          : merged
+            ? 'rounded-xl border border-white/15 bg-white/5 px-2 py-1.5'
+            : 'rounded-xl border border-border/60 bg-muted/50 px-2 py-1.5 dark:border-border/50 dark:bg-muted/30',
+      )}
     >
       <div
         ref={listRef}
         dir="ltr"
-        className="flex min-w-full flex-nowrap items-center justify-center gap-2 overflow-x-auto overflow-y-hidden py-0.5 [scrollbar-width:thin]"
+        className={cn(
+          'store-category-bar__track flex min-w-0 flex-nowrap items-stretch gap-1.5 overflow-x-auto overflow-y-hidden py-1 [scrollbar-width:thin] [-webkit-overflow-scrolling:touch]',
+          isStore ? 'snap-x snap-mandatory scroll-smooth px-1.5 sm:px-2' : 'min-w-full justify-center gap-2 py-0.5',
+        )}
+        style={{ overscrollBehaviorX: 'contain' }}
       >
         {categories.map((c) => {
           const Icon = c.icon;
@@ -139,18 +182,25 @@ const CategoryBar = ({ language, categories, onSelect, currentCategoryId, tone =
               : 'bg-white/10 text-white hover:bg-white/15'
             : isActive
               ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'bg-background/80 text-foreground hover:bg-secondary dark:bg-background/40';
+              : 'bg-background/80 text-foreground hover:bg-muted/80 dark:bg-background/50';
           return (
             <button
               key={c.id}
               id={`cat-btn-${c.id}`}
               type="button"
               onClick={() => scrollTo(c.id)}
-              className={`inline-flex min-h-10 shrink-0 snap-center items-center justify-center gap-2 rounded-lg px-3 py-2 text-center text-sm font-medium whitespace-nowrap transition-colors ${btnClass}`}
-              aria-label={language === 'en' ? c.label.en : c.label.ar}
+              className={cn(
+                'inline-flex shrink-0 snap-center items-center justify-center gap-1.5 rounded-lg font-medium whitespace-nowrap transition-colors',
+                isStore
+                  ? 'min-h-11 max-w-[min(72vw,11.5rem)] px-3 py-2 text-xs sm:min-h-10 sm:max-w-none sm:px-3.5 sm:text-sm'
+                  : 'min-h-10 px-3 py-2 text-sm',
+                btnClass,
+              )}
+              aria-label={labelFor(c)}
+              aria-current={isActive ? 'true' : undefined}
             >
-              <Icon className={`h-4 w-4 shrink-0 md:h-5 md:w-5 ${isActive ? '' : 'opacity-80'}`} />
-              <span>{language === 'en' ? c.label.en : c.label.ar}</span>
+              <Icon className={cn('h-4 w-4 shrink-0', isActive ? '' : 'opacity-80')} aria-hidden />
+              <span className="truncate">{labelFor(c)}</span>
             </button>
           );
         })}

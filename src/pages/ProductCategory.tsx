@@ -292,10 +292,11 @@ const ProductCategory = () => {
       </div>
 
       {/* ابن مباشر لـ min-h-screen: يبقى تحت الهيدر لطول الصفحة */}
-      <div className="sticky top-[4.75rem] z-40 w-full sm:top-20 lg:top-24">
-        <div className="container mx-auto px-4 py-2.5 md:py-3">
+      <div className="store-category-sticky sticky z-40 w-full border-b border-border/30 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/85">
+        <div className="container mx-auto min-w-0 px-2 py-2 sm:px-4 sm:py-2.5 md:py-3">
           {isMobile ? (
             <CategoryBar
+              variant="store"
               language={language}
               categories={categoryNavItems.filter((c) => visibleCategoryKeys.includes(c.id))}
               currentCategoryId={categoryId}

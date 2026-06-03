@@ -5,6 +5,8 @@ export type CategoryNavItem = {
   id: string;
   icon: LucideIcon;
   label: { en: string; ar: string };
+  /** Shorter label for narrow screens (store category bar). */
+  shortLabel?: { en: string; ar: string };
 };
 
 const SECTION_ICON_MAP: Record<string, LucideIcon> = {
@@ -22,6 +24,20 @@ const SECTION_ICON_MAP: Record<string, LucideIcon> = {
 };
 
 /** Default labels for built-in section ids (fallback if title missing) */
+const SECTION_SHORT_LABEL: Record<string, { en: string; ar: string }> = {
+  'professional-vials': { en: 'Vials', ar: 'فيالات' },
+  'ampoule-solutions': { en: 'Ampoules', ar: 'أمبولات' },
+  'daily-skincare': { en: 'Daily Care', ar: 'عناية يومية' },
+  'peel-pro': { en: 'Peel Pro', ar: 'تقشير' },
+  packages: { en: 'Kits', ar: 'باقات' },
+  'new-arrivals': { en: 'New', ar: 'جديد' },
+  perfumes: { en: 'Serums', ar: 'سيرومات' },
+  'all-over-spray': { en: 'Creams', ar: 'كريمات' },
+  'apparel-mist': { en: 'Cleansers', ar: 'منظفات' },
+  'home-linen-mist': { en: 'SPF', ar: 'واقي شمس' },
+  'scented-body-powder': { en: 'Treatments', ar: 'علاجات' },
+};
+
 const SECTION_LABEL_FALLBACK: Record<string, { en: string; ar: string }> = {
   packages: { en: 'Treatment Kits', ar: 'باقات علاجية' },
   'new-arrivals': { en: 'New Arrivals', ar: 'وصل حديثاً' },
@@ -39,5 +55,6 @@ export function buildCategoryNavItems(
     id: s.id,
     icon: SECTION_ICON_MAP[s.id] ?? Sparkles,
     label: s.title?.en && s.title?.ar ? s.title : (SECTION_LABEL_FALLBACK[s.id] ?? { en: s.id, ar: s.id }),
+    shortLabel: SECTION_SHORT_LABEL[s.id],
   }));
 }

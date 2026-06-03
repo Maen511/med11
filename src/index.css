@@ -108,6 +108,32 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Store — sticky category bar (phones) */
+.store-category-sticky {
+  top: calc(4.25rem + env(safe-area-inset-top, 0px));
+}
+
+@media (min-width: 640px) {
+  .store-category-sticky {
+    top: calc(5rem + env(safe-area-inset-top, 0px));
+  }
+}
+
+@media (min-width: 1024px) {
+  .store-category-sticky {
+    top: 6rem;
+  }
+}
+
+.store-category-bar__track::-webkit-scrollbar {
+  height: 4px;
+}
+
+.store-category-bar__track::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: hsl(var(--primary) / 0.35);
+}
+
 /* Product detail — category block + presentation line */
 .product-detail-head {
   text-align: start;
