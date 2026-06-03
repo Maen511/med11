@@ -108,6 +108,23 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Checkout — mobile-first layout */
+.checkout-line-image {
+  flex-shrink: 0;
+}
+
+@media (max-width: 639px) {
+  .checkout-main .flex.items-center.gap-3 {
+    flex-wrap: wrap;
+  }
+
+  .checkout-main .flex.items-center.gap-3 > .flex.items-center.gap-3:last-child {
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 0.25rem;
+  }
+}
+
 /* Store — sticky category bar (phones) */
 .store-category-sticky {
   top: calc(4.25rem + env(safe-area-inset-top, 0px));

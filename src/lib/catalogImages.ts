@@ -4,7 +4,9 @@ import {
   getCatalogSections,
   saveCatalogSections,
 } from '@/lib/catalog';
+import { getBioskinProductImage } from '@/lib/bioskinProductImages';
 import { getProductPlaceholderImage } from '@/lib/productPlaceholders';
+import { getProductById } from '@/lib/products';
 import {
   deleteProductImageDataUrl,
   getProductImageDataUrl,
@@ -78,7 +80,10 @@ export async function resolveCatalogImage(productId: number, image: string): Pro
   if (cached) return cached;
 
   const dataUrl = await getProductImageDataUrl(refId);
-  if (!dataUrl) return getProductPlaceholderImage(productId);
+  if (!dataUrl) {
+    const bioskin = bioskinImageFallback(productId);
+    return bioskin ?? getProductPlaceholderImage(productId);
+  }
 
   const blobUrl = await dataUrlToBlobUrl(dataUrl);
   resolvedBlobUrls.set(productId, blobUrl);
@@ -107,6 +112,9 @@ export async function resolveCartProductImage(
   if (hint && !hint.startsWith('blob:')) {
     return resolveCatalogImage(productId, hint);
   }
+
+  const bioskin = bioskinImageFallback(productId);
+  if (bioskin) return bioskin;
 
   return getProductPlaceholderImage(productId);
 }
@@ -188,10 +196,44 @@ export async function removeStoredProductImage(productId: number): Promise<void>
   await deleteProductImageDataUrl(productId);
 }
 
-export function getRawCatalogProduct(productId: number): CatalogProduct | undefined {
+function bioskinCodeFromName(nameEn?: string): string | null {
+  const m = (nameEn ?? '').match(/BSK\d+/i);
+  return m ? m[0].toUpperCase() : null;
+}
+
+function bioskinImageFallback(productId: number): string | null {
+  const raw = getRawCatalogProductFromStorage(productId);
+  const nameEn = raw?.name?.en ?? getProductById(productId)?.name?.en;
+  const code = bioskinCodeFromName(nameEn);
+  return code ? getBioskinProductImage(code) : null;
+}
+
+function getRawCatalogProductFromStorage(productId: number): CatalogProduct | undefined {
   for (const sec of getCatalogSections()) {
     const found = sec.products.find((p) => p.id === productId);
     if (found) return found;
   }
   return undefined;
+}
+
+export function getRawCatalogProduct(productId: number): CatalogProduct | undefined {
+  const fromStorage = getRawCatalogProductFromStorage(productId);
+  if (fromStorage) return fromStorage;
+  const live = getProductById(productId);
+  if (!live) return undefined;
+  return {
+    id: live.id,
+    name: live.name,
+    subtitle: live.subtitle,
+    description: live.description,
+    price: live.price,
+    image: live.image,
+    rating: live.rating,
+    category: live.category,
+    inStock: live.inStock,
+    unitsPerBox: live.unitsPerBox,
+    pricePerUnit: live.pricePerUnit,
+    sellByBox: live.sellByBox,
+    sellByUnit: live.sellByUnit,
+  };
 }

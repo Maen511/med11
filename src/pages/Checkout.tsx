@@ -28,6 +28,7 @@ import { appendInvoice } from '@/lib/invoices';
 import { notifyAdminNewOrder } from '@/lib/adminOrderNotifications';
 import { notifyAdminPromoCodeUse } from '@/lib/adminPromoCodeNotifications';
 import { CartProductImage } from '@/components/CartProductImage';
+import { persistableCartImage, prefetchCartProductImages } from '@/lib/catalogImages';
 import CurrencyIcon from '@/components/CurrencyIcon';
 import { getProductById, getSectionIdForProduct } from '@/lib/products';
 import { useMergedCatalog } from '@/hooks/useMergedCatalog';
@@ -92,6 +93,20 @@ const Checkout: React.FC = () => {
     () => items.reduce((total, item) => total + item.price * item.quantity, 0),
     [items],
   );
+
+  const displayItems = useMemo(() => {
+    const liveById = new Map(mergedSections.flatMap((s) => s.products).map((p) => [p.id, p]));
+    return items.map((item) => {
+      const live = liveById.get(item.id);
+      if (!live?.image) return item;
+      return { ...item, image: persistableCartImage(item.id, live.image) };
+    });
+  }, [items, mergedSections]);
+
+  useEffect(() => {
+    if (displayItems.length === 0) return;
+    void prefetchCartProductImages(displayItems.map((i) => i.id));
+  }, [displayItems]);
 
   const sectionTitleById = useMemo(() => {
     const map = new Map<string, { en: string; ar: string }>();
@@ -521,7 +536,7 @@ const Checkout: React.FC = () => {
     <div className="min-h-screen bg-background" dir={isRtl ? 'rtl' : 'ltr'} lang={isRtl ? 'ar' : 'en'}>
       <Header language={language} onLanguageChange={setLanguage} isStatic />
       
-      <div className="container mx-auto px-4 py-10">
+      <div className="container mx-auto max-w-6xl px-4 pb-10 pt-20 sm:pt-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -546,12 +561,102 @@ const Checkout: React.FC = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Simplified left column: just proceed button */}
+        <div className="checkout-layout grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+          {/* Delivery + pay — first on phone, sidebar on desktop */}
+          <motion.aside
+            initial={{ opacity: 0, x: isRtl ? -24 : 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="checkout-sidebar order-1 lg:order-2 lg:col-span-1"
+          >
+            <div className="checkout-sidebar__inner space-y-4 lg:sticky lg:top-24">
+              {(!hasSelectedAddress) && (
+                <Card className="border-primary/30 shadow-md">
+                  <CardContent className="space-y-3 p-4">
+                    <div className="flex items-start gap-2 text-start">
+                      <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground">
+                          {language === 'en' ? 'Delivery address' : 'عنوان التوصيل'}
+                        </p>
+                        <p className="mt-1 text-sm text-muted-foreground">{texts[language].noAddressSelected}</p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={() => setAddressDialogOpen(true)}
+                      className="btn-primary h-11 w-full"
+                    >
+                      {language === 'ar' ? 'إضافة عنوان' : 'Add Address'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+              {hasSelectedAddress &&
+                (() => {
+                  const selKey = user?.email ? `med-selected-address:${user.email}` : GUEST_SELECTED_ADDRESS_KEY;
+                  const currentSelected = selKey ? localStorage.getItem(selKey) || selectedAddressId : selectedAddressId;
+                  const chosen = addresses.find((a) => a.id === currentSelected);
+                  const total = orderPricing.total;
+                  return (
+                    <Card className="border-primary/30 shadow-md">
+                      <CardContent className="space-y-4 p-4 sm:p-5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex min-w-0 items-start gap-2 text-start">
+                            <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium text-muted-foreground">
+                                {language === 'en' ? 'Delivery address' : 'عنوان التوصيل'}
+                              </p>
+                              <p className="mt-1 text-sm font-semibold leading-snug">
+                                {chosen?.label || chosen?.details || ''}
+                                {chosen?.city ? ` • ${chosen.city}` : ''}
+                              </p>
+                              {chosen?.details ? (
+                                <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{chosen.details}</p>
+                              ) : null}
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 shrink-0 gap-1 px-2 text-xs"
+                            onClick={openAddressPicker}
+                          >
+                            <Pencil className="h-3.5 w-3.5" aria-hidden />
+                            {texts[language].changeAddress}
+                          </Button>
+                        </div>
+                        <div className="flex items-center justify-between border-t border-border/50 pt-3">
+                          <span className="text-sm text-muted-foreground">
+                            {language === 'en' ? 'Order total' : 'المجموع'}
+                          </span>
+                          <span className="text-xl font-bold text-primary">
+                            {formatNumber(total)}{' '}
+                            <CurrencyIcon className="inline-block h-5 w-5 align-[-2px]" title={texts[language].currency} />
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground text-start">{texts[language].paymentNote}</p>
+                        <Button
+                          type="button"
+                          onClick={() => handleSubmit()}
+                          className="btn-primary h-12 w-full text-base font-semibold"
+                          size="lg"
+                          disabled={isLoading || !hasSelectedAddress}
+                        >
+                          {isLoading ? texts[language].processing : texts[language].placeOrder}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
+            </div>
+          </motion.aside>
+
           <motion.div
             initial={{ opacity: 0, x: isRtl ? 24 : -24 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-2"
+            className="checkout-main order-2 lg:order-1 lg:col-span-2"
           >
             <Card className="shadow-xl border-primary/40 ring-1 ring-primary/30">
               <CardHeader className="pb-3">
@@ -564,14 +669,16 @@ const Checkout: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="divide-y rounded-lg border bg-card/60 backdrop-blur">
-                  {items.map((item) => (
-                    <div key={cartLineId(item)} className="flex items-center gap-5 p-3">
-                      <CartProductImage
-                        productId={item.id}
-                        image={item.image}
-                        alt={resolveCartItemName(item.name, language)}
-                        className="h-20 w-20 rounded-xl border shadow-sm"
-                      />
+                  {displayItems.map((item) => (
+                    <div key={cartLineId(item)} className="flex items-center gap-3 p-3 sm:gap-4">
+                      <div className="checkout-line-image relative h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden rounded-xl border border-border/50 bg-muted/30 sm:h-20 sm:w-20">
+                        <CartProductImage
+                          productId={item.id}
+                          image={item.image}
+                          alt={resolveCartItemName(item.name, language)}
+                          className="h-full w-full p-1.5"
+                        />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <CartLineProductHeading
                           name={item.name}
@@ -742,12 +849,14 @@ const Checkout: React.FC = () => {
                 <CardContent className="grid grid-cols-1 gap-4 text-start sm:grid-cols-2">
                   {wishlistPicks.map((p) => (
                     <div key={p.id} className="flex items-center gap-3 rounded-lg border p-2">
-                      <CartProductImage
-                        productId={p.id}
-                        image={p.image}
-                        alt={p.name[language]}
-                        className="h-14 w-14 shrink-0 rounded-md border object-cover"
-                      />
+                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md border border-border/50 bg-muted/30">
+                        <CartProductImage
+                          productId={p.id}
+                          image={p.image}
+                          alt={p.name[language]}
+                          className="h-full w-full p-1"
+                        />
+                      </div>
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium">{p.name[language]}</div>
                         <div className="mt-0.5 text-xs text-muted-foreground">
@@ -780,12 +889,14 @@ const Checkout: React.FC = () => {
                 <CardContent className="grid grid-cols-1 gap-4 text-start sm:grid-cols-2">
                   {sameSectionSuggestions.products.map((p) => (
                     <div key={p.id} className="flex items-center gap-3 rounded-lg border p-2">
-                      <CartProductImage
-                        productId={p.id}
-                        image={p.image}
-                        alt={p.name[language]}
-                        className="h-14 w-14 shrink-0 rounded-md border object-cover"
-                      />
+                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md border border-border/50 bg-muted/30">
+                        <CartProductImage
+                          productId={p.id}
+                          image={p.image}
+                          alt={p.name[language]}
+                          className="h-full w-full p-1"
+                        />
+                      </div>
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium">{p.name[language]}</div>
                         <div className="mt-0.5 text-xs text-muted-foreground">
@@ -818,89 +929,7 @@ const Checkout: React.FC = () => {
                 </CardContent>
               </Card>
             ) : null}
-          </motion.div>
 
-          {/* Order Summary */}
-          <motion.div
-            initial={{ opacity: 0, x: isRtl ? -24 : 24 }}
-            animate={{ opacity: 1, x: 0 }}
-          >
-            <div className="sticky top-8 space-y-3">
-              {(!hasSelectedAddress) && (
-                <div className="rounded-lg border bg-secondary/40 p-3 text-sm flex items-center justify-between">
-                  <span className="text-muted-foreground">{texts[language].noAddressSelected}</span>
-                  <Button
-                    type="button"
-                    onClick={() => setAddressDialogOpen(true)}
-                    className="btn-accent"
-                    size="sm"
-                  >
-                    {language === 'ar' ? 'إضافة عنوان' : 'Add Address'}
-                  </Button>
-                </div>
-              )}
-              {hasSelectedAddress && (
-                (() => {
-                  const selKey = user?.email ? `med-selected-address:${user.email}` : GUEST_SELECTED_ADDRESS_KEY;
-                  const currentSelected = selKey ? (localStorage.getItem(selKey) || selectedAddressId) : selectedAddressId;
-                  const chosen = addresses.find(a => a.id === currentSelected);
-                  const total = orderPricing.total;
-                  return (
-                    <div className="rounded-xl border border-primary/20 bg-card/70 p-5 md:p-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 items-start">
-                        <div className="min-w-0 pe-2">
-                          <div className="mb-1 flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
-                            <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground md:text-sm">
-                              <MapPin className="h-4 w-4 shrink-0" aria-hidden />
-                              <span className="font-medium leading-tight">{language === 'en' ? 'Delivery address' : 'عنوان التوصيل'}</span>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 shrink-0 gap-1 px-2 text-xs whitespace-nowrap"
-                              onClick={openAddressPicker}
-                            >
-                              <Pencil className="h-3.5 w-3.5" aria-hidden />
-                              {texts[language].changeAddress}
-                            </Button>
-                          </div>
-                          <div className="font-semibold text-sm md:text-base truncate">
-                            {chosen?.label || chosen?.details || ''}{chosen?.city ? ` • ${chosen.city}` : ''}
-                          </div>
-                          {chosen?.details && (
-                            <div className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">{chosen.details}</div>
-                          )}
-                        </div>
-                        <div className="text-end">
-                          <div className="text-muted-foreground text-xs md:text-sm">{language==='en' ? 'Order total' : 'المجموع'}</div>
-                          <div className="text-lg md:text-2xl font-bold">
-                            {total} <CurrencyIcon className="inline-block h-5 w-5 align-[-2px]" title={texts[language].currency} />
-                          </div>
-                        </div>
-                      </div>
-                      <p className="mt-3 text-xs text-muted-foreground text-start">{texts[language].paymentNote}</p>
-                      <div className="mt-4 flex justify-end md:mt-5">
-                        <Button
-                          type="button"
-                          onClick={() => handleSubmit()}
-                          className="btn-primary h-12 w-full px-6 text-base md:h-14 md:w-auto md:px-8 md:text-lg"
-                          size="lg"
-                          disabled={isLoading || !hasSelectedAddress}
-                        >
-                          {isLoading ? texts[language].processing : texts[language].placeOrder}
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })()
-              )}
-              {/* Button is included inside the info box above when an address exists */}
-            </div>
-
-            {/* Recommendations removed per request */}
-
-            {/* Last Purchase */}
             <div className="mt-6">
               {(() => {
                 try {
@@ -956,12 +985,14 @@ const Checkout: React.FC = () => {
                           const qty = li.qty || li.quantity || 1;
                           return (
                             <div key={`${li.id}-${name}`} className="flex items-center gap-3 p-2 rounded-lg border">
-                              <CartProductImage
-                                productId={li.id}
-                                image={image}
-                                alt={name}
-                                className="w-12 h-12 object-cover rounded-md border"
-                              />
+                              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-border/50 bg-muted/30">
+                                <CartProductImage
+                                  productId={li.id}
+                                  image={image}
+                                  alt={name}
+                                  className="h-full w-full p-0.5"
+                                />
+                              </div>
                               <div className="min-w-0 flex-1">
                                 <div className="text-sm font-medium truncate">{name}</div>
                                 <div className="text-xs text-muted-foreground mt-0.5">

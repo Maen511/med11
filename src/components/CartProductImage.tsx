@@ -52,14 +52,19 @@ export function CartProductImage({ productId, image, alt, className }: CartProdu
     return () => window.removeEventListener(CATALOG_IMAGES_HYDRATED_EVENT, onHydrated);
   }, [load]);
 
+  const onImgError = () => {
+    const fallback = getProductPlaceholderImage(productId);
+    if (src !== fallback) setSrc(fallback);
+  };
+
   return (
     <img
       src={src}
       alt={alt}
-      className={cn('object-cover', className)}
+      className={cn('object-contain object-center', className)}
       loading="lazy"
       decoding="async"
-      onError={() => setSrc(placeholder)}
+      onError={onImgError}
     />
   );
 }
