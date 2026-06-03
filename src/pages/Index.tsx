@@ -127,10 +127,10 @@ const Index = () => {
           className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(to_top,rgba(0,0,0,0.35)_0%,transparent_55%)] sm:bg-[linear-gradient(to_top,rgba(0,0,0,0.52)_0%,rgba(0,0,0,0.38)_min(14%,12vh),rgba(0,0,0,0.2)_min(24%,22vh),rgba(0,0,0,0.08)_min(34%,30vh),transparent_46%)] dark:bg-[linear-gradient(to_top,rgba(0,0,0,0.5)_0%,transparent_55%)] sm:dark:bg-[linear-gradient(to_top,rgba(0,0,0,0.66)_0%,rgba(0,0,0,0.48)_min(14%,12vh),rgba(0,0,0,0.26)_min(24%,22vh),rgba(0,0,0,0.1)_min(34%,30vh),transparent_46%)]"
           aria-hidden
         />
-        <div className="relative z-10 flex h-full w-full max-w-full items-end justify-center pb-10 pt-16 sm:items-center sm:pb-10 sm:pt-24">
-          <div className="w-full max-w-full px-4 sm:px-6 md:px-10 text-center">
+        <div className="home-hero-copy relative z-10 flex h-full w-full max-w-full items-center justify-center px-4 pb-8 text-center sm:pb-10 sm:pt-24">
+          <div className="home-hero-copy__inner w-full max-w-full sm:px-2 md:px-10">
             <motion.div
-              className="relative mb-6"
+              className="home-hero-title-wrap relative mb-6"
               initial={false}
               animate={heroTextVisible ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 14, filter: 'blur(8px)' }}
               transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
@@ -161,7 +161,7 @@ const Index = () => {
               />
             </motion.div>
             <motion.p
-              className="text-base min-[380px]:text-lg sm:text-xl md:text-3xl text-white max-w-5xl mx-auto leading-relaxed font-semibold"
+              className="text-base min-[380px]:text-lg sm:text-xl md:text-3xl text-white max-w-5xl mx-auto leading-snug sm:leading-relaxed font-semibold px-1"
               initial={false}
               animate={heroTextVisible ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 14, filter: 'blur(6px)' }}
               transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}

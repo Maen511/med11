@@ -397,6 +397,49 @@ const Header = ({ language, onLanguageChange, isStatic = false }: HeaderProps) =
           </div>
         </div>
 
+        {/* Mobile / tablet — main links always visible (not only inside hamburger) */}
+        <nav
+          className={`lg:hidden flex w-full items-center justify-center gap-5 overflow-x-auto pb-1 pt-0.5 text-xs font-medium [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-6 sm:text-sm [&::-webkit-scrollbar]:hidden ${
+            isTopTransparent ? 'text-white' : 'text-white'
+          }`}
+          dir={language === 'ar' ? 'rtl' : 'ltr'}
+          lang={language === 'ar' ? 'ar' : 'en'}
+          aria-label={language === 'en' ? 'Main navigation' : 'التنقل الرئيسي'}
+        >
+          <Link
+            to="/"
+            className={`shrink-0 transition-colors ${isTopTransparent ? 'hover:text-white/85' : 'hover:text-white/80'}`}
+            onClick={(e) => {
+              if (location.pathname === '/') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
+          >
+            {language === 'en' ? 'Home' : 'الرئيسية'}
+          </Link>
+          {canAccessCatalog ? (
+            <Link
+              to={categoriesHref}
+              className={`shrink-0 transition-colors ${isTopTransparent ? 'hover:text-white/85' : 'hover:text-white/80'}`}
+            >
+              {language === 'en' ? 'Store' : 'المتجر'}
+            </Link>
+          ) : null}
+          <Link
+            to="/about"
+            className={`shrink-0 transition-colors ${isTopTransparent ? 'hover:text-white/85' : 'hover:text-white/80'}`}
+          >
+            {language === 'en' ? 'About Us' : 'من نحن'}
+          </Link>
+          <Link
+            to="/contact"
+            className={`shrink-0 transition-colors ${isTopTransparent ? 'hover:text-white/85' : 'hover:text-white/80'}`}
+          >
+            {language === 'en' ? 'Contact' : 'اتصل بنا'}
+          </Link>
+        </nav>
+
         {/* Mobile Navigation */}
         <AnimatePresence>
           {isMobileMenuOpen && (
@@ -410,59 +453,6 @@ const Header = ({ language, onLanguageChange, isStatic = false }: HeaderProps) =
               transition={{ duration: 0.3 }}
             >
               <div className="flex flex-col space-y-2">
-                {/* Home */}
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.05 }}
-                >
-                  <Link
-                    to="/"
-                    className="block text-foreground hover:text-primary transition-colors py-2 px-4 hover:bg-secondary rounded-lg"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {language === 'en' ? 'Home' : 'الرئيسية'}
-                  </Link>
-                </motion.div>
-
-                {canAccessCatalog && (
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 }}
-                  >
-                    <Link
-                      to={categoriesHref}
-                      className="block rounded-lg px-4 py-2 text-foreground transition-colors hover:bg-secondary hover:text-primary"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {language === 'en' ? 'Store' : 'المتجر'}
-                    </Link>
-                  </motion.div>
-                )}
-
-                {/* About */}
-                <motion.div
-                  className="text-foreground hover:text-primary transition-colors py-2 px-4 hover:bg-secondary rounded-lg"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.25 }}
-                  onClick={() => { setIsMobileMenuOpen(false); navigate('/about'); }}
-                >
-                  {language === 'en' ? 'About Us' : 'من نحن'}
-                </motion.div>
-
-                {/* Contact */}
-                <motion.div
-                  className="text-foreground hover:text-primary transition-colors py-2 px-4 hover:bg-secondary rounded-lg"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
-                  onClick={() => { setIsMobileMenuOpen(false); navigate('/contact'); }}
-                >
-                  {language === 'en' ? 'Contact' : 'اتصل بنا'}
-                </motion.div>
-
                 {canAccessCatalog ? (
                   <>
                     <motion.div
