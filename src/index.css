@@ -981,7 +981,8 @@ body {
 .site-footer__logo-wrap {
   display: flex;
   justify-content: center;
-  margin-bottom: 0.85rem;
+  margin-bottom: 1rem;
+  padding-inline: 0.5rem;
 }
 
 @media (min-width: 640px) {
@@ -1015,8 +1016,8 @@ body {
   display: block;
   width: auto;
   height: auto;
-  max-width: min(9.5rem, 42vw);
-  max-height: 2.75rem;
+  max-width: min(15rem, 78vw);
+  max-height: 4.75rem;
   object-fit: contain;
   animation: footer-logo-glow 3s ease-in-out infinite;
 }
