@@ -108,6 +108,112 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Product detail — category block + presentation line */
+.product-detail-head {
+  text-align: start;
+}
+
+.product-detail-category-block {
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid hsl(var(--border) / 0.55);
+  background: hsl(var(--muted) / 0.22);
+}
+
+.product-detail-category-desc {
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-height: min(11rem, 38vh);
+  overflow-y: auto;
+  padding-inline-end: 0.35rem;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / 0.35) transparent;
+}
+
+.product-detail-category-desc::-webkit-scrollbar {
+  width: 5px;
+}
+
+.product-detail-category-desc::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: hsl(var(--primary) / 0.35);
+}
+
+.product-detail-spec {
+  margin: 0;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Product detail — image fills frame edge-to-edge (matches store cards) */
+.product-detail-media__frame {
+  isolation: isolate;
+  aspect-ratio: 4 / 3;
+}
+
+.product-detail-media__frame--hero {
+  aspect-ratio: 1 / 1;
+}
+
+@media (min-width: 640px) {
+  .product-detail-media__frame--hero {
+    aspect-ratio: 5 / 6;
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-detail-media__frame--hero {
+    aspect-ratio: 4 / 5;
+  }
+}
+
+.product-detail-media__img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.product-detail-related-card__media .product-detail-media__img {
+  position: absolute;
+  object-fit: cover;
+}
+
+/* Product detail — reference layout, site theme colors */
+.product-detail-related-rail {
+  scroll-padding-inline: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / 0.35) transparent;
+}
+
+.product-detail-related-rail::-webkit-scrollbar {
+  height: 6px;
+}
+
+.product-detail-related-rail::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: hsl(var(--primary) / 0.35);
+}
+
+.product-detail-related-card {
+  @apply transition-shadow duration-300;
+}
+
+.product-detail-related-card:hover {
+  @apply shadow-md;
+}
+
+.product-detail-tab-panel {
+  animation: fadeInUp 0.35s ease-out forwards;
+}
+
 /* Opaque edge bands — hide YouTube stop/skip/back without full-page vignette */
 .hero-youtube-chrome {
   position: absolute;

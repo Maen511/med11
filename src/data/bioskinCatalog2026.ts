@@ -454,6 +454,7 @@ function rowToProduct(row: Row): CatalogProduct {
     id: row.id,
     name: { en: titleEn, ar: titleAr },
     subtitle: { en: row.presentationEn, ar: row.presentationAr },
+    summary: { en: row.indicationEn, ar: row.indicationAr },
     description: { en: descEn, ar: descAr },
     price: row.price,
     image: getBioskinProductImage(row.code),

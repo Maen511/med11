@@ -9,6 +9,7 @@ export type Product = {
   id: number;
   name: { en: string; ar: string };
   subtitle?: { en: string; ar: string };
+  summary?: { en: string; ar: string };
   description: { en: string; ar: string };
   price: number;
   image: string;
@@ -104,6 +105,7 @@ function catalogProductToProduct(p: CatalogProduct): Product {
     id: p.id,
     name: p.name,
     subtitle: p.subtitle,
+    summary: p.summary,
     description: p.description,
     price: p.price,
     image: p.image,

@@ -4,6 +4,8 @@ export type CatalogProduct = {
   id: number;
   name: { en: string; ar: string };
   subtitle?: { en: string; ar: string };
+  /** Short line under category on product page (e.g. indication). */
+  summary?: { en: string; ar: string };
   description: { en: string; ar: string };
   price: number;
   image: string;
