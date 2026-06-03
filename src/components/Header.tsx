@@ -425,49 +425,6 @@ const Header = ({ language, onLanguageChange, isStatic = false }: HeaderProps) =
           </div>
         </div>
 
-        {/* Mobile / tablet — main links always visible (not only inside hamburger) */}
-        <nav
-          className={`lg:hidden flex w-full items-center justify-center gap-5 overflow-x-auto pb-1 pt-0.5 text-xs font-medium [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-6 sm:text-sm [&::-webkit-scrollbar]:hidden ${
-            isTopTransparent ? 'text-white' : 'text-white'
-          }`}
-          dir={language === 'ar' ? 'rtl' : 'ltr'}
-          lang={language === 'ar' ? 'ar' : 'en'}
-          aria-label={language === 'en' ? 'Main navigation' : 'التنقل الرئيسي'}
-        >
-          <Link
-            to="/"
-            className={`shrink-0 transition-colors ${isTopTransparent ? 'hover:text-white/85' : 'hover:text-white/80'}`}
-            onClick={(e) => {
-              if (location.pathname === '/') {
-                e.preventDefault();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }
-            }}
-          >
-            {language === 'en' ? 'Home' : 'الرئيسية'}
-          </Link>
-          {canAccessCatalog ? (
-            <Link
-              to={categoriesHref}
-              className={`shrink-0 transition-colors ${isTopTransparent ? 'hover:text-white/85' : 'hover:text-white/80'}`}
-            >
-              {language === 'en' ? 'Store' : 'المتجر'}
-            </Link>
-          ) : null}
-          <Link
-            to="/about"
-            className={`shrink-0 transition-colors ${isTopTransparent ? 'hover:text-white/85' : 'hover:text-white/80'}`}
-          >
-            {language === 'en' ? 'About Us' : 'من نحن'}
-          </Link>
-          <Link
-            to="/contact"
-            className={`shrink-0 transition-colors ${isTopTransparent ? 'hover:text-white/85' : 'hover:text-white/80'}`}
-          >
-            {language === 'en' ? 'Contact' : 'اتصل بنا'}
-          </Link>
-        </nav>
-
       </div>
 
       {/* Mobile drawer — fixed overlay (does not stretch header / break hero layout) */}
@@ -495,6 +452,48 @@ const Header = ({ language, onLanguageChange, isStatic = false }: HeaderProps) =
               transition={{ duration: 0.22 }}
             >
               <div className="flex flex-col gap-1">
+                <Link
+                  to="/"
+                  className="block rounded-lg px-4 py-2.5 text-foreground transition-colors hover:bg-secondary hover:text-primary"
+                  onClick={(e) => {
+                    setIsMobileMenuOpen(false);
+                    if (location.pathname === '/') {
+                      e.preventDefault();
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                  }}
+                >
+                  {language === 'en' ? 'Home' : 'الرئيسية'}
+                </Link>
+
+                {canAccessCatalog ? (
+                  <Link
+                    to={categoriesHref}
+                    className="block rounded-lg px-4 py-2.5 text-foreground transition-colors hover:bg-secondary hover:text-primary"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {language === 'en' ? 'Store' : 'المتجر'}
+                  </Link>
+                ) : null}
+
+                <Link
+                  to="/about"
+                  className="block rounded-lg px-4 py-2.5 text-foreground transition-colors hover:bg-secondary hover:text-primary"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {language === 'en' ? 'About Us' : 'من نحن'}
+                </Link>
+
+                <Link
+                  to="/contact"
+                  className="block rounded-lg px-4 py-2.5 text-foreground transition-colors hover:bg-secondary hover:text-primary"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {language === 'en' ? 'Contact' : 'اتصل بنا'}
+                </Link>
+
+                <div className="my-1 h-px bg-border" aria-hidden />
+
                 {!isLoggedIn ? (
                   <button
                     type="button"
