@@ -62,28 +62,86 @@
   animation-play-state: paused;
 }
 
-/* Homepage catalog promo — centered modal card */
-.catalog-promo-card {
-  animation: catalogPromoPop 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+/* Homepage catalog promo — luxury horizontal dock (below hero, no overlay) */
+.catalog-promo-dock__card {
+  border-radius: 1.125rem;
+  background: linear-gradient(
+    135deg,
+    rgba(12, 12, 14, 0.94) 0%,
+    rgba(22, 20, 18, 0.92) 48%,
+    rgba(10, 10, 12, 0.96) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 0 0 1px rgba(212, 175, 120, 0.12),
+    0 22px 50px -14px rgba(0, 0, 0, 0.65),
+    0 8px 24px -8px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: catalogPromoDockIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@keyframes catalogPromoPop {
+.catalog-promo-dock__shine {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 42%,
+    transparent 58%
+  );
+  animation: catalogPromoShine 4.5s ease-in-out infinite;
+}
+
+.catalog-promo-dock__media-glow {
+  background: linear-gradient(
+    to inline-end,
+    transparent 55%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+}
+
+.catalog-promo-dock__media img {
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.catalog-promo-dock__card:hover .catalog-promo-dock__media img {
+  transform: scale(1.05);
+}
+
+.catalog-promo-dock__cta {
+  letter-spacing: 0.04em;
+}
+
+@keyframes catalogPromoDockIn {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.96);
+    transform: translateY(1.25rem);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
-.catalog-promo-card__media img {
-  transition: transform 0.35s ease;
+@keyframes catalogPromoShine {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateX(-120%);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translateX(120%);
+  }
 }
 
-.catalog-promo-card:hover .catalog-promo-card__media img {
-  transform: scale(1.03);
+@media (min-width: 768px) {
+  .catalog-promo-dock__card {
+    border-radius: 1.25rem;
+  }
 }
 
 /* Home hero — BIOSKIN + tagline centered on phones, slightly above midline */
