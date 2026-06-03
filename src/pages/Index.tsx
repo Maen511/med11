@@ -198,7 +198,7 @@ const Index = () => {
               animate={isMobileHome ? { opacity: 1, x: 0 } : undefined}
               transition={{ duration: 0.7 }}
               viewport={viewportInstant}
-              className="home-bioskin-line__media relative order-1 mx-auto w-full max-w-[min(92vw,17.5rem)] aspect-square shrink-0 overflow-hidden rounded-2xl border shadow-xl sm:max-w-md lg:order-2 lg:mx-0 lg:max-w-none lg:aspect-auto lg:min-h-[560px]"
+              className="home-bioskin-line__media relative order-1 mx-auto aspect-square w-full shrink-0 overflow-hidden rounded-2xl border shadow-xl sm:max-w-md lg:order-2 lg:mx-0 lg:max-w-none lg:aspect-auto lg:min-h-[560px]"
             >
               <img
                 src="/section-2.png"
