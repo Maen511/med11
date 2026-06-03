@@ -246,13 +246,11 @@
   padding-block: 0.25rem;
 }
 
-/* Home — BIO SKIN line + Why BIOSKIN: blurred ambient, full viewport split */
+/* Home — BIO SKIN line + Why BIOSKIN: blurred ambient; full viewport on md+ only */
 .home-bioskin-line.home-content-section,
 .home-why-bioskin.home-content-section {
   padding-top: 0;
   padding-bottom: 0;
-  min-height: 100svh;
-  min-height: 100dvh;
   background: hsl(var(--background));
 }
 
@@ -314,8 +312,6 @@
   width: 100%;
   max-width: 100%;
   padding: 0;
-  min-height: 100svh;
-  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -333,9 +329,10 @@
 .home-why-bioskin__media-box {
   position: relative;
   width: 100%;
-  height: 100%;
-  min-height: min(54svh, 28rem);
-  max-height: min(72svh, 44rem);
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 16 / 10;
+  max-height: clamp(12rem, 38vw, 14.5rem);
   margin-inline: auto;
   padding: 0;
   border-radius: 1.35rem;
@@ -378,7 +375,7 @@
 
 .home-bioskin-line__copy,
 .home-why-bioskin__copy {
-  flex: 1;
+  flex: none;
   min-height: 0;
 }
 
@@ -420,9 +417,26 @@
 }
 
 @media (min-width: 768px) {
+  .home-bioskin-line.home-content-section,
+  .home-why-bioskin.home-content-section {
+    min-height: 100svh;
+    min-height: 100dvh;
+  }
+
+  .home-bioskin-line__inner,
+  .home-why-bioskin__inner {
+    min-height: 100svh;
+    min-height: 100dvh;
+  }
+
   .home-bioskin-line__grid,
   .home-why-bioskin__grid {
     grid-template-columns: minmax(0, 1.22fr) minmax(0, 0.78fr);
+  }
+
+  .home-bioskin-line__copy,
+  .home-why-bioskin__copy {
+    flex: 1;
   }
 
   .home-bioskin-line__media,
@@ -439,7 +453,6 @@
     margin-inline: 0;
     border-radius: 1.5rem;
   }
-
 }
 
 .home-bioskin-line.home-content-section + .home-why-bioskin.home-content-section {
@@ -473,24 +486,130 @@
   }
 }
 
-@media (max-width: 639px) {
+/* Phones — compact stacked sections (no full-screen stretch per block) */
+@media (max-width: 767px) {
   .home-content-section {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
   }
 
   .home-bioskin-line.home-content-section,
   .home-why-bioskin.home-content-section {
-    padding-top: 0;
-    padding-bottom: 0;
-    min-height: 100svh;
-    min-height: 100dvh;
+    min-height: 0;
+  }
+
+  .home-bioskin-line__inner,
+  .home-why-bioskin__inner {
+    min-height: 0;
+  }
+
+  .home-bioskin-line__grid,
+  .home-why-bioskin__grid {
+    flex: none;
+    align-content: start;
+    align-items: start;
+    gap: 1.125rem;
+    padding: 0.875rem 1rem 1rem;
+  }
+
+  .home-bioskin-line__media,
+  .home-why-bioskin__media {
+    align-self: start;
+    height: auto;
   }
 
   .home-bioskin-line__media-box,
   .home-why-bioskin__media-box {
-    min-height: min(56svh, 30rem);
-    max-height: min(64svh, 36rem);
+    height: auto;
+  }
+
+  .home-bioskin-line__copy,
+  .home-why-bioskin__copy {
+    flex: none;
+    flex-grow: 0;
+    align-self: start;
+    gap: 1rem;
+  }
+
+  .home-bioskin-line__points,
+  .home-why-bioskin__points {
+    flex: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+
+  .home-bioskin-line__copy-body,
+  .home-why-bioskin__copy-body {
+    gap: 0.65rem;
+    padding: 1rem 1.125rem;
+  }
+
+  .home-bioskin-line__points,
+  .home-why-bioskin__points {
+    gap: 0.65rem;
+  }
+
+  .home-bioskin-line__points-grid,
+  .home-why-bioskin__points-grid {
+    gap: 0.625rem;
+  }
+
+  .home-bioskin-line__media-box,
+  .home-why-bioskin__media-box {
+    min-height: 0;
+    max-height: none;
+    height: auto;
+    aspect-ratio: 16 / 10;
+    max-height: clamp(12.5rem, 42vw, 15rem);
+    border-radius: 1rem;
+  }
+
+  .home-bioskin-line__title,
+  .home-why-bioskin__title {
+    font-size: clamp(1.65rem, 5.2vw, 1.95rem);
+    line-height: 1.12;
+    margin-bottom: 0.25rem;
+  }
+
+  .home-bioskin-line__lead,
+  .home-why-bioskin__lead {
+    font-size: clamp(1rem, 3.2vw, 1.125rem);
+    line-height: 1.55;
+  }
+
+  .home-bioskin-line__sublead,
+  .home-why-bioskin__sublead {
+    font-size: clamp(0.92rem, 2.8vw, 1.05rem);
+    line-height: 1.5;
+  }
+
+  .home-bioskin-line__points-label,
+  .home-why-bioskin__points-label {
+    font-size: clamp(1.05rem, 3.4vw, 1.2rem);
+    line-height: 1.3;
+  }
+
+  .home-bioskin-line__point,
+  .home-why-bioskin__point {
+    padding: 0.6rem 0.7rem;
+    gap: 0.5rem;
+    border-radius: 0.75rem;
+  }
+
+  .home-bioskin-line__point-text,
+  .home-why-bioskin__point-text {
+    font-size: clamp(0.82rem, 2.6vw, 0.95rem);
+    line-height: 1.45;
+  }
+
+  .home-bioskin-line__point-icon,
+  .home-why-bioskin__point-icon {
+    width: clamp(1rem, 3vw, 1.15rem);
+    height: clamp(1rem, 3vw, 1.15rem);
+  }
+
+  .home-why-bioskin__media-box::after {
+    height: 2.5rem;
   }
 }
 

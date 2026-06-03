@@ -61,6 +61,29 @@ const Index = () => {
     return () => clearInterval(timer);
   }, []);
 
+  const bioskinLinePoints = {
+    en: [
+      'Wide selection: brightening, hydration, renewal, and daily protection.',
+      'Professional-inspired formulas for different skin types and routines.',
+      'From daily essentials to targeted treatment-focused options.',
+      'Consistent quality you can trust for visible, healthy-looking results.',
+      'Serums, cleansers, creams, and sun care designed to work together.',
+      'Clear active benefits with practical guidance for real daily use.',
+      'Options for face, body, and hair in one coherent care journey.',
+      'A balanced line that supports morning-to-night skincare routines.',
+    ],
+    ar: [
+      'تشكيلة واسعة: تفتيح، ترطيب، تجديد، وحماية يومية.',
+      'تركيبات مستوحاة من العناية الاحترافية لأنواع البشرة المختلفة.',
+      'من الأساسيات اليومية إلى الخيارات العلاجية الموجهة.',
+      'جودة متسقة تثق بها لنتائج واضحة ومظهر بشرة صحي.',
+      'سيرومات ومنظفات وكريمات وواقيات شمس تتكامل في روتين واحد.',
+      'فوائد فعّالة واضحة مع إرشادات عملية للاستخدام اليومي.',
+      'خيارات للوجه والجسم والشعر في رحلة عناية متماسكة.',
+      'خط متوازن يدعم روتين العناية من الصباح حتى المساء.',
+    ],
+  } as const;
+
   const whyPoints = {
     en: [
       'Advanced aesthetic formulas inspired by modern dermatology care standards.',
@@ -186,7 +209,7 @@ const Index = () => {
       </motion.section>
 
       <motion.section
-        className="home-bioskin-line home-content-section relative z-[1] flex min-h-svh w-full max-w-full flex-col overflow-hidden"
+        className="home-bioskin-line home-content-section relative z-[1] flex min-h-0 w-full max-w-full flex-col overflow-hidden md:min-h-svh"
         {...sectionReveal}
       >
         <div className="home-bioskin-line__ambient pointer-events-none" aria-hidden>
@@ -194,17 +217,17 @@ const Index = () => {
         </div>
         <div className="home-bioskin-line__ambient-overlay pointer-events-none" aria-hidden />
 
-        <div className="home-content-section__inner home-bioskin-line__inner relative z-10 flex min-h-svh w-full flex-1 flex-col">
-          <div className="home-bioskin-line__grid grid min-h-0 w-full flex-1 grid-cols-1 items-stretch gap-6 px-4 pb-8 pt-6 sm:gap-8 sm:px-8 sm:pb-10 sm:pt-8 md:grid-cols-2 md:items-stretch md:gap-10 md:px-10 md:pb-12 md:pt-10 lg:px-12 lg:pb-14">
+        <div className="home-content-section__inner home-bioskin-line__inner relative z-10 flex min-h-0 w-full flex-col md:min-h-svh md:flex-1">
+          <div className="home-bioskin-line__grid grid min-h-0 w-full grid-cols-1 items-start md:flex-1 md:grid-cols-2 md:items-stretch md:gap-10 md:px-10 md:pb-12 md:pt-10 lg:px-12 lg:pb-14">
             <motion.div
-              className="home-bioskin-line__media relative order-1 flex min-h-0 w-full min-w-0 items-stretch justify-center md:order-none md:col-start-1 md:row-start-1 rtl:md:col-start-2"
+              className="home-bioskin-line__media relative order-1 flex w-full min-w-0 justify-center md:order-none md:min-h-0 md:items-stretch md:col-start-1 md:row-start-1 rtl:md:col-start-2"
               initial={isMobileHome ? false : { opacity: 0, y: 16 }}
               whileInView={isMobileHome ? undefined : { opacity: 1, y: 0 }}
               animate={isMobileHome ? { opacity: 1, y: 0 } : undefined}
               transition={{ duration: 0.75 }}
               viewport={viewportInstant}
             >
-              <div className="home-bioskin-line__media-box relative h-full w-full overflow-hidden">
+              <div className="home-bioskin-line__media-box relative h-auto w-full overflow-hidden md:h-full">
                 <img
                   src="/section-2.png"
                   alt={language === 'en' ? 'BIO SKIN product line' : 'مجموعة منتجات BIO SKIN'}
@@ -216,8 +239,8 @@ const Index = () => {
               </div>
             </motion.div>
 
-            <div className="home-bioskin-line__copy order-2 flex min-h-0 w-full min-w-0 flex-col gap-6 text-center md:order-none md:col-start-2 md:row-start-1 md:gap-7 md:text-start lg:gap-8 rtl:md:col-start-1">
-              <div className="home-bioskin-line__copy-body flex w-full flex-col gap-4 rounded-2xl border border-border/40 bg-background/50 p-5 shadow-lg backdrop-blur-md sm:gap-5 sm:p-6">
+            <div className="home-bioskin-line__copy order-2 flex min-h-0 w-full min-w-0 flex-col gap-4 text-center md:order-none md:col-start-2 md:row-start-1 md:gap-7 md:text-start lg:gap-8 rtl:md:col-start-1">
+              <div className="home-bioskin-line__copy-body flex w-full flex-col gap-3.5 rounded-2xl border border-border/40 bg-background/50 p-4 shadow-lg backdrop-blur-md sm:gap-5 sm:p-6">
                 <motion.h2
                   className={`home-bioskin-line__title w-full shrink-0 break-words pb-1 font-extralight text-gradient ${language === 'ar' ? 'tracking-normal' : 'tracking-wider'}`}
                   initial={isMobileHome ? false : { opacity: 0, y: 20 }}
@@ -248,28 +271,15 @@ const Index = () => {
                 </p>
               </div>
 
-              <div className="home-bioskin-line__points flex w-full flex-col gap-4">
+              <div className="home-bioskin-line__points flex w-full flex-col gap-3.5">
                 <h3 className="home-bioskin-line__points-label font-semibold text-foreground">
                   {language === 'en' ? 'Why this line?' : 'لماذا هذه المجموعة؟'}
                 </h3>
-                <ul className="home-bioskin-line__points-grid grid w-full grid-cols-1 gap-3 text-start">
-                  {(language === 'en'
-                    ? [
-                        'Wide selection: brightening, hydration, renewal, and daily protection.',
-                        'Professional-inspired formulas for different skin types and routines.',
-                        'From daily essentials to targeted treatment-focused options.',
-                        'Consistent quality you can trust for visible, healthy-looking results.',
-                      ]
-                    : [
-                        'تشكيلة واسعة: تفتيح، ترطيب، تجديد، وحماية يومية.',
-                        'تركيبات مستوحاة من العناية الاحترافية لأنواع البشرة المختلفة.',
-                        'من الأساسيات اليومية إلى الخيارات العلاجية الموجهة.',
-                        'جودة متسقة تثق بها لنتائج واضحة ومظهر بشرة صحي.',
-                      ]
-                  ).map((point) => (
+                <ul className="home-bioskin-line__points-grid grid w-full grid-cols-2 gap-2.5 text-start sm:gap-3">
+                  {bioskinLinePoints[language].map((point) => (
                     <li
                       key={point}
-                      className="home-bioskin-line__point flex items-start gap-3 rounded-xl border border-border/45 bg-background/55 p-3.5 shadow-md backdrop-blur-sm sm:p-4"
+                      className="home-bioskin-line__point flex items-start gap-2.5 rounded-xl border border-border/45 bg-background/55 p-3 shadow-md backdrop-blur-sm sm:gap-3 sm:p-4"
                     >
                       <CheckCircle2 className="home-bioskin-line__point-icon mt-0.5 shrink-0 text-primary" />
                       <span className="home-bioskin-line__point-text">{point}</span>
@@ -283,7 +293,7 @@ const Index = () => {
       </motion.section>
 
       <motion.section
-        className="home-why-bioskin home-content-section relative z-0 flex min-h-svh w-full max-w-full flex-col overflow-hidden"
+        className="home-why-bioskin home-content-section relative z-0 flex min-h-0 w-full max-w-full flex-col overflow-hidden md:min-h-svh"
         {...sectionReveal}
       >
         <div className="home-why-bioskin__ambient pointer-events-none" aria-hidden>
@@ -299,17 +309,17 @@ const Index = () => {
         </div>
         <div className="home-why-bioskin__ambient-overlay pointer-events-none" aria-hidden />
 
-        <div className="home-content-section__inner home-why-bioskin__inner relative z-10 flex min-h-svh w-full flex-1 flex-col">
-          <div className="home-why-bioskin__grid grid min-h-0 w-full flex-1 grid-cols-1 items-stretch gap-6 px-4 pb-8 pt-6 sm:gap-8 sm:px-8 sm:pb-10 sm:pt-8 md:grid-cols-2 md:items-stretch md:gap-10 md:px-10 md:pb-12 md:pt-10 lg:px-12 lg:pb-14">
+        <div className="home-content-section__inner home-why-bioskin__inner relative z-10 flex min-h-0 w-full flex-col md:min-h-svh md:flex-1">
+          <div className="home-why-bioskin__grid grid min-h-0 w-full grid-cols-1 items-start md:flex-1 md:grid-cols-2 md:items-stretch md:gap-10 md:px-10 md:pb-12 md:pt-10 lg:px-12 lg:pb-14">
             <motion.div
-              className="home-why-bioskin__media relative order-1 flex min-h-0 w-full min-w-0 items-stretch justify-center md:order-none md:col-start-1 md:row-start-1 rtl:md:col-start-2"
+              className="home-why-bioskin__media relative order-1 flex w-full min-w-0 justify-center md:order-none md:min-h-0 md:items-stretch md:col-start-1 md:row-start-1 rtl:md:col-start-2"
               initial={isMobileHome ? false : { opacity: 0, y: 16 }}
               whileInView={isMobileHome ? undefined : { opacity: 1, y: 0 }}
               animate={isMobileHome ? { opacity: 1, y: 0 } : undefined}
               transition={{ duration: 0.75 }}
               viewport={viewportInstant}
             >
-              <div className="home-why-bioskin__media-box relative h-full w-full overflow-hidden">
+              <div className="home-why-bioskin__media-box relative h-auto w-full overflow-hidden md:h-full">
                 <motion.img
                   key={whyImageIndex}
                   src={whyImages[whyImageIndex]}
@@ -330,8 +340,8 @@ const Index = () => {
               </div>
             </motion.div>
 
-            <div className="home-why-bioskin__copy order-2 flex min-h-0 w-full min-w-0 flex-col gap-6 text-center md:order-none md:col-start-2 md:row-start-1 md:gap-7 md:text-start lg:gap-8 rtl:md:col-start-1">
-              <div className="home-why-bioskin__copy-body flex w-full flex-col gap-4 rounded-2xl border border-border/40 bg-background/50 p-5 shadow-lg backdrop-blur-md sm:gap-5 sm:p-6">
+            <div className="home-why-bioskin__copy order-2 flex min-h-0 w-full min-w-0 flex-col gap-4 text-center md:order-none md:col-start-2 md:row-start-1 md:gap-7 md:text-start lg:gap-8 rtl:md:col-start-1">
+              <div className="home-why-bioskin__copy-body flex w-full flex-col gap-3.5 rounded-2xl border border-border/40 bg-background/50 p-4 shadow-lg backdrop-blur-md sm:gap-5 sm:p-6">
                 <motion.h2
                   className={`home-why-bioskin__title w-full shrink-0 break-words pb-1 font-extralight text-gradient ${language === 'ar' ? 'tracking-normal' : 'tracking-wider'}`}
                   initial={isMobileHome ? false : { opacity: 0, y: 20 }}
@@ -362,15 +372,15 @@ const Index = () => {
                 </p>
               </div>
 
-              <div className="home-why-bioskin__points flex w-full flex-col gap-4">
+              <div className="home-why-bioskin__points flex w-full flex-col gap-3.5">
                 <h3 className="home-why-bioskin__points-label font-semibold text-foreground">
                   {language === 'en' ? 'Key advantages' : 'أبرز المزايا'}
                 </h3>
-                <ul className="home-why-bioskin__points-grid grid w-full grid-cols-1 gap-2.5 text-start sm:grid-cols-2 sm:gap-3">
+                <ul className="home-why-bioskin__points-grid grid w-full grid-cols-2 gap-2.5 text-start sm:gap-3">
                   {whyPoints[language].map((point) => (
                     <li
                       key={point}
-                      className="home-why-bioskin__point flex items-start gap-3 rounded-xl border border-border/45 bg-background/55 p-3 shadow-md backdrop-blur-sm sm:p-3.5"
+                      className="home-why-bioskin__point flex items-start gap-2.5 rounded-xl border border-border/45 bg-background/55 p-3 shadow-md backdrop-blur-sm sm:gap-3 sm:p-3.5"
                     >
                       <CheckCircle2 className="home-why-bioskin__point-icon mt-0.5 shrink-0 text-primary" />
                       <span className="home-why-bioskin__point-text">{point}</span>
