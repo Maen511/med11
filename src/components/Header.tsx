@@ -41,8 +41,10 @@ const Header = ({ language, onLanguageChange, isStatic = false }: HeaderProps) =
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [accountAuthOpen, setAccountAuthOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuTop, setMobileMenuTop] = useState(0);
   const scrollRafRef = useRef(0);
   const isScrolledRef = useRef(false);
+  const headerShellRef = useRef<HTMLDivElement>(null);
   const { isLoggedIn, canAccessCatalog, hasPendingCatalogCode, grantedSectionIds, logout, user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -105,8 +107,34 @@ const Header = ({ language, onLanguageChange, isStatic = false }: HeaderProps) =
   }, []);
 
   const isTopTransparent = !isStatic && !isScrolled && location.pathname === '/';
+  const headerSurfaceSolid = !isTopTransparent || isMobileMenuOpen;
 
-  const accountButtonClass = isTopTransparent
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const updateMenuTop = () => {
+      const el = headerShellRef.current;
+      if (!el) return;
+      setMobileMenuTop(el.getBoundingClientRect().bottom + 8);
+    };
+    updateMenuTop();
+    window.addEventListener('resize', updateMenuTop);
+    return () => window.removeEventListener('resize', updateMenuTop);
+  }, [isMobileMenuOpen]);
+
+  const accountButtonClass = headerSurfaceSolid
     ? 'h-8 px-2 text-white hover:text-white/85 hover:bg-white/20 md:px-2.5'
     : 'h-8 px-2 text-white hover:text-white/80 hover:bg-white/10 md:px-2.5';
 
@@ -136,14 +164,14 @@ const Header = ({ language, onLanguageChange, isStatic = false }: HeaderProps) =
   return (
     <motion.header
       className={`${isStatic ? 'relative w-full' : 'fixed inset-x-0 top-0 z-50 w-full'} transition-all duration-300 ${
-        isTopTransparent ? 'bg-transparent border-transparent shadow-none' : 'bg-black/60 backdrop-blur-md border-b border-white/15 shadow-md'
+        headerSurfaceSolid ? 'bg-black/75 backdrop-blur-md border-b border-white/15 shadow-md' : 'bg-transparent border-transparent shadow-none'
       }`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6 }}
       dir="ltr"
     >
-      <div className="w-full box-border px-3 sm:px-4 md:px-5 lg:px-6 py-0.5 md:py-1">
+      <div ref={headerShellRef} className="w-full box-border px-3 sm:px-4 md:px-5 lg:px-6 py-0.5 md:py-1">
         {/* Grid: equal side columns so nav sits in true horizontal center of the bar (md+). Mobile: logo | actions. */}
         <div
           className="grid w-full grid-cols-[1fr_auto] items-center gap-x-2 lg:grid-cols-[1fr_auto_1fr] lg:gap-x-3"
@@ -389,7 +417,7 @@ const Header = ({ language, onLanguageChange, isStatic = false }: HeaderProps) =
             <Button
               variant="ghost"
               size="sm"
-              className={`h-8 px-2 lg:hidden ${isTopTransparent ? 'text-white hover:text-white/85 hover:bg-white/20' : 'text-white hover:text-white/80 hover:bg-white/10'}`}
+              className={`h-8 px-2 lg:hidden ${headerSurfaceSolid ? 'text-white hover:text-white/85 hover:bg-white/20' : 'text-white hover:text-white/80 hover:bg-white/10'}`}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -440,83 +468,104 @@ const Header = ({ language, onLanguageChange, isStatic = false }: HeaderProps) =
           </Link>
         </nav>
 
-        {/* Mobile Navigation */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
+      </div>
+
+      {/* Mobile drawer — fixed overlay (does not stretch header / break hero layout) */}
+      <AnimatePresence>
+        {isMobileMenuOpen ? (
+          <>
+            <motion.button
+              type="button"
+              className="fixed inset-0 z-[55] bg-black/55 lg:hidden"
+              aria-label={language === 'en' ? 'Close menu' : 'إغلاق القائمة'}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
             <motion.nav
-              className="lg:hidden mt-4 p-4 pb-4 bg-background/95 backdrop-blur-md border border-border rounded-xl shadow-lg"
+              className="fixed inset-x-3 z-[56] mx-auto max-h-[min(70vh,24rem)] max-w-md overflow-y-auto rounded-xl border border-border bg-background p-3 shadow-2xl lg:hidden"
+              style={{ top: mobileMenuTop }}
               dir={language === 'ar' ? 'rtl' : 'ltr'}
               lang={language === 'ar' ? 'ar' : 'en'}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22 }}
             >
-              <div className="flex flex-col space-y-2">
+              <div className="flex flex-col gap-1">
+                {!isLoggedIn ? (
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-lg px-4 py-2.5 text-start text-foreground transition-colors hover:bg-secondary hover:text-primary"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setAccountAuthOpen(true);
+                    }}
+                  >
+                    <User className="h-4 w-4 shrink-0 opacity-70" />
+                    {language === 'en' ? 'Sign in / Register' : 'تسجيل الدخول / إنشاء حساب'}
+                  </button>
+                ) : null}
+
                 {canAccessCatalog ? (
-                  <>
-                    <motion.div
-                      className="text-foreground hover:text-primary transition-colors py-2 px-4 hover:bg-secondary rounded-lg"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.35 }}
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                        navigate('/wishlist');
-                      }}
-                    >
-                      {language === 'en' ? 'Wishlist' : 'المفضلة'}
-                    </motion.div>
-                    {isLoggedIn ? (
-                      <motion.div
-                        className="text-foreground hover:text-primary transition-colors py-2 px-4 hover:bg-secondary rounded-lg"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.4 }}
-                        onClick={() => {
-                          setIsMobileMenuOpen(false);
-                          navigate('/addresses');
-                        }}
-                      >
-                        {language === 'en' ? 'Delivery Address' : 'عنوان التوصيل'}
-                      </motion.div>
-                    ) : null}
-                  </>
+                  <Link
+                    to="/wishlist"
+                    className="block rounded-lg px-4 py-2.5 text-foreground transition-colors hover:bg-secondary hover:text-primary"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {language === 'en' ? 'Wishlist' : 'المفضلة'}
+                  </Link>
+                ) : null}
+
+                {canAccessCatalog && isLoggedIn ? (
+                  <Link
+                    to="/addresses"
+                    className="block rounded-lg px-4 py-2.5 text-foreground transition-colors hover:bg-secondary hover:text-primary"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {language === 'en' ? 'Delivery Address' : 'عنوان التوصيل'}
+                  </Link>
                 ) : null}
 
                 {isLoggedIn ? (
                   <>
-                    <motion.div
-                      className="text-foreground hover:text-primary transition-colors py-2 px-4 hover:bg-secondary rounded-lg"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.45 }}
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                        navigate('/profile');
-                      }}
+                    <Link
+                      to="/profile"
+                      className="block rounded-lg px-4 py-2.5 text-foreground transition-colors hover:bg-secondary hover:text-primary"
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {language === 'en' ? 'My profile' : 'ملفي الشخصي'}
-                    </motion.div>
-                    <motion.div
-                      className="text-destructive hover:text-destructive transition-colors py-2 px-4 hover:bg-destructive/10 rounded-lg"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 }}
+                    </Link>
+                    {isAdmin ? (
+                      <Link
+                        to="/admin"
+                        className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-foreground transition-colors hover:bg-secondary hover:text-primary"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <LayoutDashboard className="h-4 w-4 shrink-0 opacity-70" />
+                        {language === 'en' ? 'Admin dashboard' : 'لوحة التحكم'}
+                      </Link>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-2 rounded-lg px-4 py-2.5 text-start text-destructive transition-colors hover:bg-destructive/10"
                       onClick={() => {
                         setIsMobileMenuOpen(false);
                         handleLogout();
                       }}
                     >
+                      <LogOut className="h-4 w-4 shrink-0" />
                       {language === 'en' ? 'Log out' : 'تسجيل الخروج'}
-                    </motion.div>
+                    </button>
                   </>
                 ) : null}
               </div>
             </motion.nav>
-          )}
-        </AnimatePresence>
-      </div>
+          </>
+        ) : null}
+      </AnimatePresence>
       {accountAuthOpen ? (
         <CustomerAuthDialog open onOpenChange={setAccountAuthOpen} language={language} />
       ) : null}
