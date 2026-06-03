@@ -62,40 +62,27 @@
   animation-play-state: paused;
 }
 
-/* Home hero YouTube — slightly wider cover; mobile-safe clipping */
+/* Home hero YouTube — cover-fill inside hero box (no letterbox bars) */
 .hero-youtube-root {
+  container-type: size;
   width: 100%;
   max-width: 100%;
 }
 
 .hero-youtube-iframe {
-  width: 100vw;
-  height: 56.25vw;
-  min-width: max(100%, 177.78vh);
-  min-height: max(100%, 56.25vw);
-  transform: translate(-50%, -50%);
+  width: max(100cqw, calc(100cqh * 16 / 9));
+  height: max(100cqh, calc(100cqw * 9 / 16));
+  transform: translate(-50%, -50%) scale(1.08);
   transform-origin: center center;
 }
 
-@media (max-width: 639px) {
+@supports not (width: 1cqw) {
   .hero-youtube-iframe {
-    width: max(100%, 177.78vh);
-    height: max(100%, 56.25vw);
-    min-width: max(100%, 177.78vh);
-    min-height: max(100%, 56.25vw);
-    transform: translate(-50%, -50%);
-  }
-}
-
-@media (min-width: 640px) {
-  .hero-youtube-iframe {
-    transform: translate(-50%, -50%) scale(1.04);
-  }
-}
-
-@media (min-width: 768px) {
-  .hero-youtube-iframe {
-    transform: translate(-50%, -50%) scale(1.02);
+    width: 100%;
+    height: 100%;
+    min-width: 100%;
+    min-height: 100%;
+    transform: translate(-50%, -50%) scale(1.35);
   }
 }
 
@@ -151,25 +138,114 @@
   padding-block: 0.25rem;
 }
 
-/* No gap between BIO SKIN line block and Why BIOSKIN */
+/* BIO SKIN + Why BIOSKIN — clear separation, no visual overlap */
 .home-bioskin-line.home-content-section {
-  padding-bottom: 0;
+  padding-top: 1.5rem;
+  padding-bottom: 1rem;
 }
 
 .home-why-bioskin.home-content-section {
-  padding-top: 0;
+  padding-top: 1.25rem;
+  padding-bottom: 1.5rem;
 }
 
 .home-bioskin-line__inner {
-  padding-bottom: 0 !important;
+  padding-bottom: 0.25rem;
 }
 
 .home-why-bioskin__inner {
-  padding-top: 0 !important;
+  padding-top: 0.25rem;
 }
 
 .home-bioskin-line.home-content-section + .home-why-bioskin.home-content-section {
   margin-top: 0;
+  border-top: 1px solid hsl(var(--border) / 0.35);
+}
+
+/* Why BIOSKIN — ambient fill for the whole section (not a text-only box) */
+.home-why-bioskin.home-content-section {
+  background: hsl(var(--background));
+}
+
+.home-why-bioskin__ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.home-why-bioskin__ambient-img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 108%;
+  height: 108%;
+  min-width: 100%;
+  min-height: 100%;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  object-position: center 42%;
+  opacity: 0.24;
+  filter: blur(16px) saturate(0.88);
+}
+
+.dark .home-why-bioskin__ambient-img {
+  opacity: 0.17;
+  filter: blur(18px) saturate(0.72) brightness(0.88);
+}
+
+.home-why-bioskin__ambient-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    165deg,
+    hsl(var(--background) / 0.88) 0%,
+    hsl(var(--background) / 0.82) 45%,
+    hsl(var(--background) / 0.9) 100%
+  );
+}
+
+.home-why-bioskin__ambient-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 90% 70% at 50% 35%,
+    hsl(var(--primary) / 0.06) 0%,
+    transparent 65%
+  );
+}
+
+.dark .home-why-bioskin__ambient-overlay {
+  background: linear-gradient(
+    165deg,
+    hsl(var(--background) / 0.9) 0%,
+    hsl(var(--background) / 0.84) 50%,
+    hsl(var(--background) / 0.92) 100%
+  );
+}
+
+.home-why-bioskin__media {
+  position: relative;
+  z-index: 2;
+}
+
+.home-why-bioskin__copy {
+  position: relative;
+  z-index: 2;
+}
+
+.home-why-bioskin__eyebrow {
+  background: hsl(var(--background) / 0.5);
+  backdrop-filter: blur(6px);
+}
+
+.home-why-bioskin__point {
+  padding: 0.15rem 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
 
 @media (min-width: 640px) {
@@ -179,12 +255,15 @@
   }
 
   .home-bioskin-line.home-content-section {
-    padding-bottom: 0;
+    padding-top: 2rem;
+    padding-bottom: 1.5rem;
   }
 
   .home-why-bioskin.home-content-section {
-    padding-top: 0;
+    padding-top: 1.75rem;
+    padding-bottom: 2rem;
   }
+
 }
 
 @media (min-width: 1024px) {
@@ -194,22 +273,18 @@
   }
 
   .home-bioskin-line.home-content-section {
-    padding-bottom: 0;
+    padding-top: 2.5rem;
+    padding-bottom: 2rem;
   }
 
   .home-why-bioskin.home-content-section {
-    padding-top: 0;
-  }
-
-  .home-bioskin-line__grid,
-  .home-why-bioskin__grid {
-    align-items: start;
+    padding-top: 2rem;
+    padding-bottom: 2.5rem;
   }
 
   .home-bioskin-line__copy,
   .home-why-bioskin__copy {
-    align-self: start;
-    padding-top: 0.15rem;
+    padding-top: 0;
   }
 }
 
@@ -221,11 +296,13 @@
   }
 
   .home-bioskin-line.home-content-section {
-    padding-bottom: 0;
+    padding-top: 1.25rem;
+    padding-bottom: 0.75rem;
   }
 
   .home-why-bioskin.home-content-section {
-    padding-top: 0;
+    padding-top: 1rem;
+    padding-bottom: 1.25rem;
   }
 
   .home-bioskin-line__media {
@@ -377,7 +454,7 @@
   animation: fadeInUp 0.35s ease-out forwards;
 }
 
-/* Opaque edge bands — hide YouTube stop/skip/back without full-page vignette */
+/* Clip YouTube chrome via overflow + iframe scale — no opaque black bands */
 .hero-youtube-chrome {
   position: absolute;
   inset: 0;
@@ -387,19 +464,7 @@
 }
 
 .hero-youtube-chrome__edge {
-  position: absolute;
-  inset-inline: 0;
-  background: #000;
-}
-
-.hero-youtube-chrome__edge--top {
-  top: 0;
-  height: clamp(2rem, 5vw, 2.75rem);
-}
-
-.hero-youtube-chrome__edge--bottom {
-  bottom: 0;
-  height: clamp(2.75rem, 8vw, 4rem);
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

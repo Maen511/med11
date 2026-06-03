@@ -186,12 +186,12 @@ const Index = () => {
       </motion.section>
 
       <motion.section
-        className="home-bioskin-line home-content-section relative w-full max-w-full overflow-x-clip bg-background"
+        className="home-bioskin-line home-content-section relative z-[1] w-full max-w-full overflow-hidden bg-background"
         {...sectionReveal}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.45),transparent_38%),radial-gradient(circle_at_80%_70%,rgba(0,0,0,0.06),transparent_35%)]" />
         <div className="home-content-section__inner home-bioskin-line__inner relative z-10 w-full px-3 pb-0 sm:px-5 lg:px-6">
-          <div className="home-bioskin-line__grid grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-2 lg:gap-8">
+          <div className="home-bioskin-line__grid grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-2 lg:items-center lg:gap-8">
             <motion.div
               initial={isMobileHome ? false : { opacity: 0, x: isMobileHome ? 0 : -24 }}
               whileInView={isMobileHome ? undefined : { opacity: 1, x: 0 }}
@@ -262,26 +262,26 @@ const Index = () => {
       </motion.section>
 
       <motion.section
-        className="home-why-bioskin home-content-section relative w-full max-w-full overflow-x-clip bg-background"
+        className="home-why-bioskin home-content-section relative z-0 w-full max-w-full overflow-hidden"
         {...sectionReveal}
       >
-        <motion.img
-          key={`why-bg-${whyImageIndex}`}
-          src={whyImages[whyImageIndex]}
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover opacity-35 blur-sm sm:block"
-          initial={{ opacity: 0, scale: 1.04 }}
-          animate={{ opacity: 0.35, scale: 1.02 }}
-          transition={{ duration: 0.9 }}
-        />
-        <div className="pointer-events-none absolute inset-0 bg-background/65" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(0,0,0,0.06),transparent_30%),radial-gradient(circle_at_10%_90%,rgba(255,255,255,0.5),transparent_35%)]" />
+        <div className="home-why-bioskin__ambient pointer-events-none" aria-hidden>
+          <motion.img
+            key={`why-ambient-${whyImageIndex}`}
+            src={whyImages[whyImageIndex]}
+            alt=""
+            className="home-why-bioskin__ambient-img"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.85 }}
+          />
+        </div>
+        <div className="home-why-bioskin__ambient-overlay pointer-events-none" aria-hidden />
         <div className="home-content-section__inner home-why-bioskin__inner relative z-10 w-full px-3 pt-0 sm:px-5 lg:px-6">
-          <div className="home-why-bioskin__grid grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-2 lg:gap-8">
+          <div className="home-why-bioskin__grid grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-2 lg:items-center lg:gap-8">
             <motion.div
               className="home-why-bioskin__media relative order-1 mx-auto aspect-square w-full shrink-0 overflow-hidden rounded-2xl border border-white/20 shadow-2xl sm:max-w-lg lg:order-2 lg:mx-0 lg:max-w-none lg:aspect-[5/6] lg:h-auto lg:max-h-[28rem] lg:min-h-0"
-              initial={isMobileHome ? false : { opacity: 0, y: 44 }}
+              initial={isMobileHome ? false : { opacity: 0, y: 24 }}
               whileInView={isMobileHome ? undefined : { opacity: 1, y: 0 }}
               animate={isMobileHome ? { opacity: 1, y: 0 } : undefined}
               transition={{ duration: 0.8, delay: 0.1, ease: easeScroll }}
@@ -308,14 +308,14 @@ const Index = () => {
             </motion.div>
 
             <motion.div
-              className="home-why-bioskin__copy order-2 flex flex-col justify-start px-0 text-center sm:px-2 md:px-4 lg:order-1 lg:text-start"
+              className="home-why-bioskin__copy order-2 flex flex-col justify-start text-center lg:order-1 lg:text-start"
               initial={isMobileHome ? false : { opacity: 0, y: 40 }}
               whileInView={isMobileHome ? undefined : { opacity: 1, y: 0 }}
               animate={isMobileHome ? { opacity: 1, y: 0 } : undefined}
               transition={{ duration: 0.75, ease: easeScroll }}
               viewport={viewportInstant}
             >
-              <p className="mx-auto mb-3 inline-flex w-fit items-center rounded-full border border-primary/30 bg-background/75 px-3 py-1 text-[0.65rem] font-semibold text-primary sm:mb-4 sm:px-4 sm:py-1.5 sm:text-xs md:text-sm lg:mx-0">
+              <p className="home-why-bioskin__eyebrow mx-auto mb-3 inline-flex w-fit items-center rounded-full border border-primary/25 px-3 py-1 text-[0.65rem] font-semibold text-primary sm:mb-4 sm:px-4 sm:py-1.5 sm:text-xs md:text-sm lg:mx-0">
                 {language === 'en' ? 'Therapeutic Beauty, Smarter Care' : 'تجميل علاجي بعناية أذكى'}
               </p>
               <h2 className="home-why-bioskin__title mb-3 w-full max-w-full break-words px-0.5 text-2xl font-semibold text-gradient sm:mb-4 sm:text-4xl md:text-5xl">
@@ -326,12 +326,9 @@ const Index = () => {
                   ? 'BIOSKIN combines professional aesthetic quality with a practical shopping experience, so every step from choosing products to checkout feels clear, reliable, and aligned with your daily care goals.'
                   : 'BIOSKIN تجمع بين الجودة التجميلية الاحترافية وتجربة شراء عملية، لتكون كل خطوة من اختيار المنتجات وحتى إتمام الطلب واضحة، موثوقة، ومناسبة لأهداف العناية اليومية.'}
               </p>
-              <ul className="home-why-bioskin__points-grid mx-auto grid max-w-2xl grid-cols-2 gap-2 text-start text-[0.68rem] leading-snug text-foreground/85 sm:gap-3 sm:text-sm md:grid-cols-2 md:gap-4 md:text-base lg:mx-0">
+              <ul className="home-why-bioskin__points-grid mx-auto grid max-w-2xl grid-cols-2 gap-x-3 gap-y-2.5 text-start text-[0.68rem] leading-snug text-foreground/90 sm:gap-x-4 sm:gap-y-3 sm:text-sm md:text-base lg:mx-0">
                 {whyPoints[language].map((point) => (
-                  <li
-                    key={point}
-                    className="flex items-start gap-1.5 rounded-lg bg-background/55 px-2 py-1.5 sm:gap-3 sm:px-3 sm:py-2 md:leading-relaxed"
-                  >
+                  <li key={point} className="home-why-bioskin__point flex items-start gap-1.5 sm:gap-2.5 md:leading-relaxed">
                     <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary sm:h-5 sm:w-5" />
                     <span>{point}</span>
                   </li>

@@ -92,7 +92,7 @@ export default function HomeHeroYoutube({ title, className }: Props) {
   return (
     <div
       ref={rootRef}
-      className={cn('hero-youtube-root absolute inset-0 isolate overflow-hidden bg-black', className)}
+      className={cn('hero-youtube-root absolute inset-0 isolate overflow-hidden', className)}
     >
       <iframe
         ref={iframeRef}
