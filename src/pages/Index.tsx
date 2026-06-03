@@ -186,11 +186,11 @@ const Index = () => {
       </motion.section>
 
       <motion.section
-        className="home-bioskin-line home-content-section relative w-full max-w-full overflow-x-clip bg-gradient-to-b from-background to-secondary/20"
+        className="home-bioskin-line home-content-section relative w-full max-w-full overflow-x-clip bg-background"
         {...sectionReveal}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.45),transparent_38%),radial-gradient(circle_at_80%_70%,rgba(0,0,0,0.06),transparent_35%)]" />
-        <div className="home-content-section__inner relative z-10 w-full px-3 sm:px-5 lg:px-6">
+        <div className="home-content-section__inner home-bioskin-line__inner relative z-10 w-full px-3 pb-0 sm:px-5 lg:px-6">
           <div className="home-bioskin-line__grid grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-2 lg:gap-8">
             <motion.div
               initial={isMobileHome ? false : { opacity: 0, x: isMobileHome ? 0 : -24 }}
@@ -277,7 +277,7 @@ const Index = () => {
         />
         <div className="pointer-events-none absolute inset-0 bg-background/65" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(0,0,0,0.06),transparent_30%),radial-gradient(circle_at_10%_90%,rgba(255,255,255,0.5),transparent_35%)]" />
-        <div className="home-content-section__inner relative z-10 w-full px-3 sm:px-5 lg:px-6">
+        <div className="home-content-section__inner home-why-bioskin__inner relative z-10 w-full px-3 pt-0 sm:px-5 lg:px-6">
           <div className="home-why-bioskin__grid grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-2 lg:gap-8">
             <motion.div
               className="home-why-bioskin__media relative order-1 mx-auto aspect-square w-full shrink-0 overflow-hidden rounded-2xl border border-white/20 shadow-2xl sm:max-w-lg lg:order-2 lg:mx-0 lg:max-w-none lg:aspect-[5/6] lg:h-auto lg:max-h-[28rem] lg:min-h-0"
