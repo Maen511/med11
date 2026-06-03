@@ -62,6 +62,35 @@
   animation-play-state: paused;
 }
 
+/* Customer auth portal — login / register modal (reference-style dark teal) */
+.customer-auth-portal {
+  background: linear-gradient(180deg, #05242c 0%, #041f26 100%);
+  color: #f5ebe6;
+  ring-color: rgb(201 169 154 / 0.25);
+}
+
+.customer-auth-portal__submit {
+  background: #d2b4a9;
+  color: #05242c;
+}
+
+.customer-auth-portal__submit:hover:not(:disabled) {
+  background: #e0c4b8;
+  color: #041a20;
+}
+
+.customer-auth-portal__submit:disabled {
+  opacity: 0.65;
+}
+
+.customer-auth-portal__logo {
+  filter: drop-shadow(0 2px 12px rgb(0 0 0 / 0.35));
+}
+
+.customer-auth-portal .customer-auth-portal__register-head + div label {
+  color: #e8d5cc;
+}
+
 /* Home hero — BIOSKIN + tagline centered on phones, slightly above midline */
 @media (max-width: 639px) {
   .home-hero-copy {
