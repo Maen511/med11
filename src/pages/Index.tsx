@@ -262,7 +262,7 @@ const Index = () => {
       </motion.section>
 
       <motion.section
-        className="relative w-full max-w-full py-10 md:py-14 bg-background flex items-center overflow-x-clip"
+        className="home-why-bioskin relative flex w-full max-w-full items-center overflow-x-clip bg-background py-6 sm:py-10 md:py-14"
         {...sectionReveal}
       >
         <motion.img
@@ -270,65 +270,34 @@ const Index = () => {
           src={whyImages[whyImageIndex]}
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-35 blur-sm"
+          className="pointer-events-none absolute inset-0 hidden h-full w-full object-cover opacity-35 blur-sm sm:block"
           initial={{ opacity: 0, scale: 1.04 }}
           animate={{ opacity: 0.35, scale: 1.02 }}
           transition={{ duration: 0.9 }}
         />
         <div className="pointer-events-none absolute inset-0 bg-background/65" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(0,0,0,0.06),transparent_30%),radial-gradient(circle_at_10%_90%,rgba(255,255,255,0.5),transparent_35%)]" />
-        <div className="w-full px-3 sm:px-5 lg:px-6 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10 items-stretch">
+        <div className="relative z-10 w-full px-3 sm:px-5 lg:px-6">
+          <div className="home-why-bioskin__grid grid grid-cols-1 items-stretch gap-4 sm:gap-6 md:gap-10 lg:grid-cols-2">
             <motion.div
-              className="flex flex-col justify-center px-1 sm:px-2 md:px-4"
-              initial={isMobileHome ? false : { opacity: 0, y: 40 }}
-              whileInView={isMobileHome ? undefined : { opacity: 1, y: 0 }}
-              animate={isMobileHome ? { opacity: 1, y: 0 } : undefined}
-              transition={{ duration: 0.75, ease: easeScroll }}
-              viewport={viewportInstant}
-            >
-              <p className="inline-flex w-fit items-center rounded-full border border-primary/30 bg-background/75 px-4 py-1.5 text-xs md:text-sm font-semibold text-primary mb-4">
-                {language === 'en' ? 'Therapeutic Beauty, Smarter Care' : 'تجميل علاجي بعناية أذكى'}
-              </p>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-gradient mb-4 w-full max-w-full break-words px-0.5">
-                {language === 'en' ? 'Why BIOSKIN?' : 'لماذا BIOSKIN؟'}
-              </h2>
-              <p className="text-base md:text-lg text-foreground/90 leading-relaxed mb-7 max-w-2xl">
-                {language === 'en'
-                  ? 'BIOSKIN combines professional aesthetic quality with a practical shopping experience, so every step from choosing products to checkout feels clear, reliable, and aligned with your daily care goals.'
-                  : 'BIOSKIN تجمع بين الجودة التجميلية الاحترافية وتجربة شراء عملية، لتكون كل خطوة من اختيار المنتجات وحتى إتمام الطلب واضحة، موثوقة، ومناسبة لأهداف العناية اليومية.'}
-              </p>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 text-sm sm:text-base content-start">
-                {whyPoints[language].map((point) => (
-                  <li key={point} className="flex items-start gap-3 text-foreground/85 leading-relaxed bg-background/55 rounded-xl px-3 py-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-
-            <motion.div
-              className="relative h-full"
+              className="home-why-bioskin__media relative order-1 mx-auto aspect-square w-full shrink-0 overflow-hidden rounded-2xl border border-white/20 shadow-2xl sm:max-w-lg lg:order-2 lg:mx-0 lg:max-w-none lg:aspect-auto lg:min-h-[680px]"
               initial={isMobileHome ? false : { opacity: 0, y: 44 }}
               whileInView={isMobileHome ? undefined : { opacity: 1, y: 0 }}
               animate={isMobileHome ? { opacity: 1, y: 0 } : undefined}
               transition={{ duration: 0.8, delay: 0.1, ease: easeScroll }}
               viewport={viewportInstant}
             >
-              <div className="relative h-[340px] sm:h-[460px] md:h-[620px] lg:h-full lg:min-h-[680px] rounded-2xl border border-white/20 overflow-hidden shadow-2xl">
-                <motion.img
-                  key={whyImageIndex}
-                  src={whyImages[whyImageIndex]}
-                  alt="DERMAFILL skincare visual"
-                  className="h-full w-full object-cover object-center"
-                  initial={{ opacity: 0, scale: 1.06 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.8 }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-              </div>
-              <div className="mt-3 flex items-center justify-center gap-2">
+              <motion.img
+                key={whyImageIndex}
+                src={whyImages[whyImageIndex]}
+                alt="BIOSKIN skincare visual"
+                className="absolute inset-0 h-full w-full object-cover object-center"
+                initial={{ opacity: 0, scale: 1.06 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8 }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+              <div className="absolute inset-x-0 bottom-3 flex items-center justify-center gap-2">
                 {whyImages.map((_, i) => (
                   <span
                     key={i}
@@ -336,6 +305,38 @@ const Index = () => {
                   />
                 ))}
               </div>
+            </motion.div>
+
+            <motion.div
+              className="home-why-bioskin__copy order-2 flex flex-col justify-center px-0 text-center sm:px-2 md:px-4 lg:order-1 lg:text-start"
+              initial={isMobileHome ? false : { opacity: 0, y: 40 }}
+              whileInView={isMobileHome ? undefined : { opacity: 1, y: 0 }}
+              animate={isMobileHome ? { opacity: 1, y: 0 } : undefined}
+              transition={{ duration: 0.75, ease: easeScroll }}
+              viewport={viewportInstant}
+            >
+              <p className="mx-auto mb-3 inline-flex w-fit items-center rounded-full border border-primary/30 bg-background/75 px-3 py-1 text-[0.65rem] font-semibold text-primary sm:mb-4 sm:px-4 sm:py-1.5 sm:text-xs md:text-sm lg:mx-0">
+                {language === 'en' ? 'Therapeutic Beauty, Smarter Care' : 'تجميل علاجي بعناية أذكى'}
+              </p>
+              <h2 className="home-why-bioskin__title mb-3 w-full max-w-full break-words px-0.5 text-2xl font-semibold text-gradient sm:mb-4 sm:text-4xl md:text-5xl">
+                {language === 'en' ? 'Why BIOSKIN?' : 'لماذا BIOSKIN؟'}
+              </h2>
+              <p className="home-why-bioskin__lead mx-auto mb-4 max-w-2xl text-sm leading-relaxed text-foreground/90 sm:mb-7 sm:text-base md:text-lg lg:mx-0">
+                {language === 'en'
+                  ? 'BIOSKIN combines professional aesthetic quality with a practical shopping experience, so every step from choosing products to checkout feels clear, reliable, and aligned with your daily care goals.'
+                  : 'BIOSKIN تجمع بين الجودة التجميلية الاحترافية وتجربة شراء عملية، لتكون كل خطوة من اختيار المنتجات وحتى إتمام الطلب واضحة، موثوقة، ومناسبة لأهداف العناية اليومية.'}
+              </p>
+              <ul className="home-why-bioskin__points-grid mx-auto grid max-w-2xl grid-cols-2 gap-2 text-start text-[0.68rem] leading-snug text-foreground/85 sm:gap-3 sm:text-sm md:grid-cols-2 md:gap-4 md:text-base lg:mx-0">
+                {whyPoints[language].map((point) => (
+                  <li
+                    key={point}
+                    className="flex items-start gap-1.5 rounded-lg bg-background/55 px-2 py-1.5 sm:gap-3 sm:px-3 sm:py-2 md:leading-relaxed"
+                  >
+                    <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary sm:h-5 sm:w-5" />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
             </motion.div>
           </div>
         </div>

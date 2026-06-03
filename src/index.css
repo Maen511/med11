@@ -153,6 +153,11 @@
     max-width: 14rem;
     justify-self: center;
   }
+
+  .home-why-bioskin__media {
+    width: min(96vw, 23rem);
+    max-width: 23rem;
+  }
 }
 
 /* Store — sticky category bar (phones) */
