@@ -14,7 +14,6 @@ import AdminInfluencerCodesPanel from '@/components/admin/AdminInfluencerCodesPa
 import AdminBonusPanel from '@/components/admin/AdminBonusPanel';
 import AdminInvoicesPanel from '@/components/admin/AdminInvoicesPanel';
 import AdminOrdersPanel from '@/components/admin/AdminOrdersPanel';
-import AdminFooterPanel from '@/components/admin/AdminFooterPanel';
 import { getCatalogSections } from '@/lib/catalog';
 import { hydrateCatalogSections, revokeHydratedCatalogImages } from '@/lib/catalogImages';
 import { CATALOG_CHANGED_EVENT } from '@/lib/catalogEvents';
@@ -78,8 +77,8 @@ const NAV_META: Record<
   bonus: {
     titleEn: 'Bonus',
     titleAr: 'بونص',
-    subtitleEn: 'Buy-X-get-Y on one catalog section — by unit or by box.',
-    subtitleAr: 'عرض X+Y على قسم واحد — بالحبة أو بالبوكس.',
+    subtitleEn: '',
+    subtitleAr: '',
   },
   promotions: {
     titleEn: 'Promotions',
@@ -92,12 +91,6 @@ const NAV_META: Record<
     titleAr: 'أكواد الإنفلونسر',
     subtitleEn: 'Create promo codes with percentage or fixed discounts.',
     subtitleAr: 'إنشاء أكواد خصم بنسبة أو مبلغ ثابت للعملاء عند الدفع.',
-  },
-  footer: {
-    titleEn: 'Site footer',
-    titleAr: 'الفوتر',
-    subtitleEn: 'Contact, address, hours, and copyright at the bottom of every page.',
-    subtitleAr: 'التواصل والعنوان وساعات العمل وحقوق النشر في أسفل الصفحات.',
   },
   settings: {
     titleEn: 'Settings',
@@ -292,7 +285,6 @@ const AdminDashboard = () => {
     bonus: <AdminBonusPanel language={language} />,
     promotions: <AdminPromotionsPanel language={language} />,
     influencers: <AdminInfluencerCodesPanel language={language} />,
-    footer: <AdminFooterPanel language={language} />,
     settings: settingsPanel,
   };
 

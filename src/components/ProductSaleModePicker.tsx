@@ -2,7 +2,6 @@ import { cn } from '@/lib/utils';
 import {
   canSellByUnit,
   getPriceForMode,
-  resolveUnitsPerBox,
   saleModeLabel,
   type ProductSaleInfo,
   type SaleMode,
@@ -23,7 +22,6 @@ const ProductSaleModePicker = ({ product, language, value, onChange, compact, va
   const isDetail = variant === 'detail';
   if (!canSellByUnit(product)) return null;
 
-  const units = resolveUnitsPerBox(product);
   const isRtl = language === 'ar';
 
   return (
@@ -80,16 +78,6 @@ const ProductSaleModePicker = ({ product, language, value, onChange, compact, va
           );
         })}
       </div>
-      {units > 1 && (
-        <p
-          className={cn(
-            'text-muted-foreground',
-            isDetail ? 'text-center text-xs' : compact ? 'text-[10px] leading-tight' : 'text-center text-xs',
-          )}
-        >
-          {isRtl ? `العلبة تحتوي ${units} حبات` : `Each box contains ${units} units`}
-        </p>
-      )}
     </div>
   );
 };

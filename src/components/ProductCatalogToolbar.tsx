@@ -2,49 +2,26 @@ import { Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import type { StoreSaleFilter, StoreStockFilter } from '@/lib/catalogProductFilter';
 
 type Props = {
   language: 'en' | 'ar';
   search: string;
   onSearchChange: (value: string) => void;
-  stockFilter: StoreStockFilter;
-  onStockFilterChange: (value: StoreStockFilter) => void;
-  saleFilter: StoreSaleFilter;
-  onSaleFilterChange: (value: StoreSaleFilter) => void;
-  showSaleFilter: boolean;
   filteredCount: number;
   totalCount: number;
   onClear: () => void;
-  hasActiveFilters: boolean;
+  hasActiveSearch: boolean;
   className?: string;
 };
-
-const stockFilters: { id: StoreStockFilter; en: string; ar: string }[] = [
-  { id: 'all', en: 'All', ar: 'الكل' },
-  { id: 'in_stock', en: 'In stock', ar: 'متوفر' },
-  { id: 'out_of_stock', en: 'Out of stock', ar: 'غير متوفر' },
-];
-
-const saleFilters: { id: StoreSaleFilter; en: string; ar: string }[] = [
-  { id: 'all', en: 'All types', ar: 'كل الأنواع' },
-  { id: 'box', en: 'By box', ar: 'بالعلبة' },
-  { id: 'unit', en: 'By unit', ar: 'بالوحدة' },
-];
 
 const ProductCatalogToolbar = ({
   language,
   search,
   onSearchChange,
-  stockFilter,
-  onStockFilterChange,
-  saleFilter,
-  onSaleFilterChange,
-  showSaleFilter,
   filteredCount,
   totalCount,
   onClear,
-  hasActiveFilters,
+  hasActiveSearch,
   className,
 }: Props) => {
   const isRtl = language === 'ar';
@@ -52,7 +29,7 @@ const ProductCatalogToolbar = ({
   return (
     <div
       className={cn(
-        'mb-5 space-y-3 rounded-2xl border border-border/60 bg-muted/20 p-3 shadow-sm backdrop-blur-sm sm:mb-6 sm:space-y-4 sm:p-4',
+        'mb-5 space-y-3 rounded-2xl border border-border/60 bg-muted/20 p-3 shadow-sm backdrop-blur-sm sm:mb-6 sm:p-4',
         className,
       )}
       dir="ltr"
@@ -87,54 +64,16 @@ const ProductCatalogToolbar = ({
             </Button>
           ) : null}
         </div>
-        {hasActiveFilters ? (
+        {hasActiveSearch ? (
           <Button type="button" variant="outline" size="sm" className="shrink-0 gap-1.5" onClick={onClear}>
             <X className="h-3.5 w-3.5" aria-hidden />
-            {isRtl ? 'مسح الفلاتر' : 'Clear filters'}
+            {isRtl ? 'مسح البحث' : 'Clear search'}
           </Button>
         ) : null}
       </div>
 
-      <div className="space-y-2">
-        <p className="text-xs font-medium text-muted-foreground">{isRtl ? 'التوفر' : 'Availability'}</p>
-        <div className="flex flex-wrap gap-2">
-          {stockFilters.map((f) => (
-            <Button
-              key={f.id}
-              type="button"
-              size="sm"
-              variant={stockFilter === f.id ? 'default' : 'outline'}
-              className="rounded-full"
-              onClick={() => onStockFilterChange(f.id)}
-            >
-              {isRtl ? f.ar : f.en}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {showSaleFilter ? (
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">{isRtl ? 'طريقة البيع' : 'Sale mode'}</p>
-          <div className="flex flex-wrap gap-2">
-            {saleFilters.map((f) => (
-              <Button
-                key={f.id}
-                type="button"
-                size="sm"
-                variant={saleFilter === f.id ? 'default' : 'outline'}
-                className="rounded-full"
-                onClick={() => onSaleFilterChange(f.id)}
-              >
-                {isRtl ? f.ar : f.en}
-              </Button>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
       <p className="text-xs text-muted-foreground">
-        {hasActiveFilters
+        {hasActiveSearch
           ? isRtl
             ? `عرض ${filteredCount} من ${totalCount} منتج`
             : `Showing ${filteredCount} of ${totalCount} products`

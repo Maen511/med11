@@ -29,6 +29,9 @@ interface CartItem {
 
 interface CartContextType {
   items: CartItem[];
+  isCartOpen: boolean;
+  setCartOpen: (open: boolean) => void;
+  toggleCartOpen: () => void;
   addToCart: (product: Omit<CartItem, 'quantity'>, quantity?: number) => void;
   removeFromCart: (id: number, variantName?: string, isSectionBonusFree?: boolean) => void;
   updateQuantity: (id: number, quantity: number, variantName?: string, isSectionBonusFree?: boolean) => void;
@@ -78,7 +81,16 @@ const CartProviderInner: React.FC<{ children: React.ReactNode }> = ({ children }
   const { canAccessCatalog } = useAuth();
   const { language } = useLanguage();
   const [items, setItems] = useState<CartItem[]>(() => withBonusSync(readCartFromStorage()));
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setCartOpen = useCallback((open: boolean) => {
+    setIsCartOpen(open);
+  }, []);
+
+  const toggleCartOpen = useCallback(() => {
+    setIsCartOpen((o) => !o);
+  }, []);
 
   useEffect(() => {
     if (canAccessCatalog) {
@@ -202,6 +214,9 @@ const CartProviderInner: React.FC<{ children: React.ReactNode }> = ({ children }
   const contextValue = useMemo(
     () => ({
       items,
+      isCartOpen,
+      setCartOpen,
+      toggleCartOpen,
       addToCart,
       removeFromCart,
       updateQuantity,
@@ -209,7 +224,18 @@ const CartProviderInner: React.FC<{ children: React.ReactNode }> = ({ children }
       getTotalPrice,
       getTotalItems,
     }),
-    [items, addToCart, removeFromCart, updateQuantity, clearCart, getTotalPrice, getTotalItems],
+    [
+      items,
+      isCartOpen,
+      setCartOpen,
+      toggleCartOpen,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      getTotalPrice,
+      getTotalItems,
+    ],
   );
 
   return <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>;

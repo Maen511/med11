@@ -7,6 +7,10 @@ import {
 
 /** مسودة عربية فقط — الإنجليزية تُشتق عند الحفظ والعرض */
 export type FooterArabicDraft = {
+  contactTitle: string;
+  supportTitle: string;
+  addressTitle: string;
+  hoursTitle: string;
   email: string;
   phoneDisplay: string;
   supportLine1: string;
@@ -60,6 +64,10 @@ function translateFreeText(ar: string, fallbackEn: string): string {
 
 export function footerContentToArabicDraft(content: FooterContent): FooterArabicDraft {
   return {
+    contactTitle: content.contact.title.ar,
+    supportTitle: content.support.title.ar,
+    addressTitle: content.address.title.ar,
+    hoursTitle: content.hours.title.ar,
     email: content.contact.email,
     phoneDisplay: content.contact.phoneDisplay,
     supportLine1: content.support.line1.ar,
@@ -74,6 +82,10 @@ export function footerContentToArabicDraft(content: FooterContent): FooterArabic
 
 export function footerContentFromArabicDraft(draft: FooterArabicDraft): FooterContent {
   const d = DEFAULT_FOOTER_CONTENT;
+  const contactTitleAr = draft.contactTitle.trim() || d.contact.title.ar;
+  const supportTitleAr = draft.supportTitle.trim() || d.support.title.ar;
+  const addressTitleAr = draft.addressTitle.trim() || d.address.title.ar;
+  const hoursTitleAr = draft.hoursTitle.trim() || d.hours.title.ar;
   const support1Ar = draft.supportLine1.trim() || d.support.line1.ar;
   const support2Ar = draft.supportLine2.trim() || d.support.line2.ar;
   const address1Ar = draft.addressLine1.trim() || d.address.line1.ar;
@@ -86,23 +98,23 @@ export function footerContentFromArabicDraft(draft: FooterArabicDraft): FooterCo
 
   return {
     contact: {
-      title: d.contact.title,
+      title: pair(contactTitleAr, enIfDefaultAr(contactTitleAr, d.contact.title.ar, d.contact.title.en)),
       email: draft.email.trim() || d.contact.email,
       phoneDisplay,
       phoneTel: phoneDisplayToTel(phoneDisplay),
     },
     support: {
-      title: d.support.title,
+      title: pair(supportTitleAr, enIfDefaultAr(supportTitleAr, d.support.title.ar, d.support.title.en)),
       line1: pair(support1Ar, enIfDefaultAr(support1Ar, d.support.line1.ar, d.support.line1.en)),
       line2: pair(support2Ar, enIfDefaultAr(support2Ar, d.support.line2.ar, d.support.line2.en)),
     },
     address: {
-      title: d.address.title,
+      title: pair(addressTitleAr, enIfDefaultAr(addressTitleAr, d.address.title.ar, d.address.title.en)),
       line1: pair(address1Ar, enIfDefaultAr(address1Ar, d.address.line1.ar, d.address.line1.en)),
       line2: pair(address2Ar, enIfDefaultAr(address2Ar, d.address.line2.ar, d.address.line2.en)),
     },
     hours: {
-      title: d.hours.title,
+      title: pair(hoursTitleAr, enIfDefaultAr(hoursTitleAr, d.hours.title.ar, d.hours.title.en)),
       time: pair(hoursTimeAr, enIfDefaultAr(hoursTimeAr, d.hours.time.ar, d.hours.time.en)),
       days: pair(hoursDaysAr, enIfDefaultAr(hoursDaysAr, d.hours.days.ar, d.hours.days.en)),
     },

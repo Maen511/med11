@@ -16,16 +16,12 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CategoryBar from '@/components/CategoryBar';
 import ProductCatalogCardFooter from '@/components/ProductCatalogCardFooter';
 import { useMergedCatalog } from '@/hooks/useMergedCatalog';
-import { canSellByUnit, cartVariantKey, getPriceForMode, type SaleMode } from '@/lib/productSaleModes';
+import { cartVariantKey, getPriceForMode, type SaleMode } from '@/lib/productSaleModes';
 import { buildCategoryNavItems } from '@/lib/categoryNav';
 import ProductCatalogToolbar from '@/components/ProductCatalogToolbar';
 import ProductCardMeta from '@/components/ProductCardMeta';
-import {
-  filterStoreCatalogProducts,
-  storeCatalogHasActiveFilters,
-  type StoreSaleFilter,
-  type StoreStockFilter,
-} from '@/lib/catalogProductFilter';
+import { isInWishlist, toggleWishlistItem } from '@/lib/wishlist';
+import { filterStoreCatalogProducts } from '@/lib/catalogProductFilter';
 import SectionBonusStorefront from '@/components/SectionBonusStorefront';
 import { resolveStoreSectionId } from '@/lib/storeNav';
 import { cn } from '@/lib/utils';
@@ -47,7 +43,6 @@ type Product = {
 
 const ProductCategory = () => {
   const RESERVATIONS_KEY = 'med-reservations';
-  const WISHLIST_KEY = 'med-wishlist';
   const SALE_WATCHES_KEY = 'med-sale-watches';
   const { categoryId } = useParams<{ categoryId: string }>();
   const navigate = useNavigate();
@@ -110,37 +105,24 @@ const ProductCategory = () => {
   const products = (currentCategory?.products || []) as Product[];
 
   const [catalogSearch, setCatalogSearch] = useState('');
-  const [stockFilter, setStockFilter] = useState<StoreStockFilter>('all');
-  const [saleFilter, setSaleFilter] = useState<StoreSaleFilter>('all');
 
   useEffect(() => {
     setCatalogSearch('');
-    setStockFilter('all');
-    setSaleFilter('all');
   }, [categoryId]);
-
-  const showSaleFilter = useMemo(
-    () => products.some((p) => canSellByUnit(p)) && products.some((p) => !canSellByUnit(p)),
-    [products],
-  );
 
   const filteredProducts = useMemo(
     () =>
       filterStoreCatalogProducts(products, {
         query: catalogSearch,
-        stock: stockFilter,
-        sale: saleFilter,
+        stock: 'all',
+        sale: 'all',
       }),
-    [products, catalogSearch, stockFilter, saleFilter],
+    [products, catalogSearch],
   );
 
-  const catalogHasActiveFilters = storeCatalogHasActiveFilters(catalogSearch, stockFilter, saleFilter);
+  const hasActiveSearch = catalogSearch.trim() !== '';
 
-  const clearCatalogFilters = () => {
-    setCatalogSearch('');
-    setStockFilter('all');
-    setSaleFilter('all');
-  };
+  const clearCatalogSearch = () => setCatalogSearch('');
 
   // Ensure tab list starts at the beginning on mobile and RTL
   useLayoutEffect(() => {
@@ -369,15 +351,10 @@ const ProductCategory = () => {
             language={language}
             search={catalogSearch}
             onSearchChange={setCatalogSearch}
-            stockFilter={stockFilter}
-            onStockFilterChange={setStockFilter}
-            saleFilter={saleFilter}
-            onSaleFilterChange={setSaleFilter}
-            showSaleFilter={showSaleFilter}
             filteredCount={filteredProducts.length}
             totalCount={products.length}
-            hasActiveFilters={catalogHasActiveFilters}
-            onClear={clearCatalogFilters}
+            hasActiveSearch={hasActiveSearch}
+            onClear={clearCatalogSearch}
             className="mx-auto max-w-[1400px]"
           />
 
@@ -398,13 +375,11 @@ const ProductCategory = () => {
                 {language === 'ar' ? 'لا توجد نتائج' : 'No matching products'}
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
-                {language === 'ar'
-                  ? 'جرّب كلمة بحث أخرى أو غيّر الفلاتر.'
-                  : 'Try a different search term or adjust the filters.'}
+                {language === 'ar' ? 'جرّب كلمة بحث أخرى.' : 'Try a different search term.'}
               </p>
-              {catalogHasActiveFilters ? (
-                <Button type="button" variant="secondary" size="sm" className="mt-5" onClick={clearCatalogFilters}>
-                  {language === 'ar' ? 'مسح الفلاتر' : 'Clear filters'}
+              {hasActiveSearch ? (
+                <Button type="button" variant="secondary" size="sm" className="mt-5" onClick={clearCatalogSearch}>
+                  {language === 'ar' ? 'مسح البحث' : 'Clear search'}
                 </Button>
               ) : null}
             </div>
@@ -419,7 +394,7 @@ const ProductCategory = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            key={`${categoryId}-${catalogSearch}-${stockFilter}-${saleFilter}`}
+            key={`${categoryId}-${catalogSearch}`}
           >
             {filteredProducts.map((product) => (
               <motion.div
@@ -520,9 +495,7 @@ const ProductCategory = () => {
                             extraActions={
                               <>
                                 {(() => {
-                                  const wished = (
-                                    JSON.parse(localStorage.getItem(WISHLIST_KEY) || '[]') as { id: number }[]
-                                  ).some((r) => r.id === product.id);
+                                  const wished = isInWishlist(product.id);
                                   return (
                                     <Button
                                       size="sm"
@@ -535,29 +508,21 @@ const ProductCategory = () => {
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        const current = JSON.parse(localStorage.getItem(WISHLIST_KEY) || '[]');
-                                        const exists = current.some((r: { id: number }) => r.id === product.id);
-                                        const next = exists
-                                          ? current.filter((r: { id: number }) => r.id !== product.id)
-                                          : [
-                                              {
-                                                id: product.id,
-                                                name: product.name,
-                                                category: product.category,
-                                                image: product.image,
-                                                price: product.price,
-                                              },
-                                              ...current,
-                                            ];
-                                        localStorage.setItem(WISHLIST_KEY, JSON.stringify(next));
+                                        const added = toggleWishlistItem({
+                                          id: product.id,
+                                          name: product.name,
+                                          category: product.category,
+                                          image: product.image,
+                                          price: product.price,
+                                        });
                                         toast.success(
                                           language === 'en'
-                                            ? exists
-                                              ? 'Removed from wishlist'
-                                              : 'Added to wishlist'
-                                            : exists
-                                              ? 'تمت الإزالة من المفضلة'
-                                              : 'أُضيف إلى المفضلة',
+                                            ? added
+                                              ? 'Added to wishlist'
+                                              : 'Removed from wishlist'
+                                            : added
+                                              ? 'أُضيف إلى المفضلة'
+                                              : 'تمت الإزالة من المفضلة',
                                         );
                                         setRefreshKey((v) => v + 1);
                                       }}

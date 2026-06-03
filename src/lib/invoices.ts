@@ -74,7 +74,15 @@ export function invoiceStatusBadgeClass(status: InvoiceStatus): string {
 export type StoredInvoice = {
   id: string;
   createdAt: number;
-  items: Array<{ id: number; name: string; qty: number; price: number; variant?: 'box' | 'unit' }>;
+  items: Array<{
+    id: number;
+    name: string;
+    qty: number;
+    price: number;
+    variant?: 'box' | 'unit';
+    /** Stable catalog image ref (idb: / public path) — not ephemeral blob URLs */
+    image?: string;
+  }>;
   total: number;
   /** Sum before influencer/promo discount */
   subtotal?: number;

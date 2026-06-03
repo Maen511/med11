@@ -57,27 +57,39 @@ const PANEL_MAX_HEIGHT =
   'calc(100dvh - 6rem - clamp(5.75rem, 22vh, 14rem) - env(safe-area-inset-bottom, 0px))';
 
 const Cart: React.FC<CartProps> = ({ language }) => {
-  const { items, updateQuantity, removeFromCart, getTotalPrice, getTotalItems } = useCart();
+  const {
+    items,
+    isCartOpen,
+    setCartOpen,
+    toggleCartOpen,
+    updateQuantity,
+    removeFromCart,
+    getTotalPrice,
+    getTotalItems,
+  } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isOpen, setIsOpen] = React.useState(false);
   const prevCountRef = React.useRef(items.length);
 
   React.useEffect(() => {
     const prev = prevCountRef.current;
     const curr = items.length;
-    if (prev === 0 && curr > 0) setIsOpen(true);
+    if (prev === 0 && curr > 0) setCartOpen(true);
     prevCountRef.current = curr;
-  }, [items.length]);
+  }, [items.length, setCartOpen]);
 
   React.useEffect(() => {
-    if (!isOpen) return;
+    if (isCartHiddenPath(location.pathname)) setCartOpen(false);
+  }, [location.pathname, setCartOpen]);
+
+  React.useEffect(() => {
+    if (!isCartOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsOpen(false);
+      if (e.key === 'Escape') setCartOpen(false);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen]);
+  }, [isCartOpen, setCartOpen]);
 
   if (isCartHiddenPath(location.pathname)) {
     return null;
@@ -106,7 +118,7 @@ const Cart: React.FC<CartProps> = ({ language }) => {
 
   const handleCheckout = () => {
     if (items.length === 0) return;
-    setIsOpen(false);
+    setCartOpen(false);
     navigate('/checkout');
   };
 
@@ -114,42 +126,27 @@ const Cart: React.FC<CartProps> = ({ language }) => {
   const isRtl = language === 'ar';
 
   const floatingPanel =
-    isOpen && typeof document !== 'undefined'
+    isCartOpen && typeof document !== 'undefined'
       ? ReactDOM.createPortal(
           <AnimatePresence>
-            <motion.div
-              key="cart-layer"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[55]"
+            <motion.aside
+              key="cart-panel"
+              role="complementary"
+              aria-label={texts[language].cart}
+              initial={{ opacity: 0, x: isRtl ? 14 : -14 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: isRtl ? 14 : -14 }}
+              transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
               dir={isRtl ? 'rtl' : 'ltr'}
               lang={isRtl ? 'ar' : 'en'}
+              className="fixed start-3 top-24 z-[60] w-[min(360px,calc(100dvw-1.25rem))] max-w-[calc(100dvw-0.75rem)]"
+              style={{ bottom: BOTTOM_INSET, maxHeight: PANEL_MAX_HEIGHT }}
             >
-              <button
-                type="button"
-                className="absolute inset-0 cursor-default bg-black/15 backdrop-blur-[1px]"
-                aria-label={texts[language].close}
-                onClick={() => setIsOpen(false)}
-              />
-
-              <motion.div
-                role="dialog"
-                aria-modal="true"
-                aria-label={texts[language].cart}
-                initial={{ opacity: 0, x: isRtl ? 14 : -14 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: isRtl ? 14 : -14 }}
-                transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
-                className="pointer-events-none fixed start-3 top-24 z-[60] w-[min(360px,calc(100dvw-1.25rem))] max-w-[calc(100dvw-0.75rem)]"
-                style={{ bottom: BOTTOM_INSET, maxHeight: PANEL_MAX_HEIGHT }}
-              >
                 <div
-                  className="pointer-events-auto flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-muted/40 shadow-xl backdrop-blur-md dark:bg-muted/25"
+                  className="flex h-full max-h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-background/95 shadow-xl dark:bg-background/90"
                   style={{ maxHeight: PANEL_MAX_HEIGHT }}
                 >
-                  <div className="shrink-0 border-b border-border/60 bg-background/60 px-3 pb-2 pt-3 backdrop-blur-sm">
+                  <div className="shrink-0 border-b border-border/60 bg-background px-3 pb-2 pt-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="inline-flex min-w-0 items-center gap-2 text-sm font-semibold">
                         <DockCartBagGlyph className="h-4 w-4 shrink-0" />
@@ -160,7 +157,7 @@ const Cart: React.FC<CartProps> = ({ language }) => {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                          onClick={() => setIsOpen(false)}
+                          onClick={() => setCartOpen(false)}
                           aria-label={texts[language].close}
                         >
                           <X className="h-4 w-4" aria-hidden />
@@ -188,7 +185,6 @@ const Cart: React.FC<CartProps> = ({ language }) => {
                               type="button"
                               className="h-20 w-20 shrink-0"
                               onClick={() => {
-                                setIsOpen(false);
                                 navigate(`/product/${item.id}`);
                               }}
                               aria-label={resolveCartItemName(item.name, language)}
@@ -206,7 +202,6 @@ const Cart: React.FC<CartProps> = ({ language }) => {
                                 variantName={item.variantName}
                                 language={language}
                                 onNameClick={() => {
-                                  setIsOpen(false);
                                   navigate(`/product/${item.id}`);
                                 }}
                               />
@@ -265,7 +260,7 @@ const Cart: React.FC<CartProps> = ({ language }) => {
                   </div>
 
                   {hasItems ? (
-                    <div className="shrink-0 space-y-3 border-t border-border/60 bg-background/80 px-3 pb-4 pt-3 backdrop-blur-sm">
+                    <div className="shrink-0 space-y-3 border-t border-border/60 bg-background px-3 pb-4 pt-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-semibold">{texts[language].total}:</span>
                         <span className="inline-flex items-center gap-1 text-lg font-bold text-primary">
@@ -279,8 +274,7 @@ const Cart: React.FC<CartProps> = ({ language }) => {
                     </div>
                   ) : null}
                 </div>
-              </motion.div>
-            </motion.div>
+            </motion.aside>
           </AnimatePresence>,
           document.body,
         )
@@ -293,8 +287,8 @@ const Cart: React.FC<CartProps> = ({ language }) => {
         size="icon"
         className="relative h-8 w-8 rounded-full border-0 bg-transparent shadow-none hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-white/35 focus-visible:ring-offset-0 sm:h-9 sm:w-9 md:h-10 md:w-10"
         aria-label={texts[language].openCart}
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((o) => !o)}
+        aria-expanded={isCartOpen}
+        onClick={toggleCartOpen}
       >
         <HeaderCartGlyph className="h-[1.15rem] w-[1.15rem] sm:h-5 sm:w-5 md:h-6 md:w-6" />
         {getTotalItems() > 0 ? (

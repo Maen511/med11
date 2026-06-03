@@ -219,6 +219,15 @@
   background: hsl(var(--primary) / 0.35);
 }
 
+/* Checkout — same-section suggestions (boxed grid) */
+.checkout-suggest-box {
+  min-height: 100%;
+}
+
+.checkout-suggest-grid .checkout-suggest-box {
+  isolation: isolate;
+}
+
 /* Checkout — mobile-first layout */
 .checkout-line-image {
   flex-shrink: 0;

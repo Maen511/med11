@@ -8,6 +8,8 @@ import CurrencyIcon from '@/components/CurrencyIcon';
 import { readWishlist, writeWishlist, WISHLIST_CHANGED, type WishlistItem } from '@/lib/wishlist';
 import { cartVariantKey } from '@/lib/productSaleModes';
 import { CartProductImage } from '@/components/CartProductImage';
+import { CATALOG_IMAGES_HYDRATED_EVENT, prefetchCartProductImages } from '@/lib/catalogImages';
+import { CATALOG_CHANGED_EVENT } from '@/lib/catalogEvents';
 
 const Wishlist = () => {
   const { language } = useLanguage();
@@ -21,8 +23,19 @@ const Wishlist = () => {
     load();
     const onChanged = () => load();
     window.addEventListener(WISHLIST_CHANGED, onChanged);
-    return () => window.removeEventListener(WISHLIST_CHANGED, onChanged);
+    window.addEventListener(CATALOG_CHANGED_EVENT, onChanged);
+    window.addEventListener(CATALOG_IMAGES_HYDRATED_EVENT, onChanged);
+    return () => {
+      window.removeEventListener(WISHLIST_CHANGED, onChanged);
+      window.removeEventListener(CATALOG_CHANGED_EVENT, onChanged);
+      window.removeEventListener(CATALOG_IMAGES_HYDRATED_EVENT, onChanged);
+    };
   }, []);
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    void prefetchCartProductImages(items.map((i) => i.id));
+  }, [items]);
 
   const remove = (id: number) => {
     const next = readWishlist().filter((w) => w.id !== id);
@@ -45,6 +58,7 @@ const Wishlist = () => {
                     productId={p.id}
                     image={p.image}
                     alt={p.name[language]}
+                    allowPlaceholder={false}
                     className="h-48 w-full bg-muted object-cover"
                   />
                 </Link>

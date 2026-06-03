@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Lock, UserPlus, Users, Trash2, Shield } from 'lucide-react';
+import { Lock, UserPlus, Users, Trash2, Shield, LayoutTemplate } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import ChangePasswordDialog from '@/components/ChangePasswordDialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import AddAdminDialog from '@/components/admin/AddAdminDialog';
+import EditFooterDialog from '@/components/admin/EditFooterDialog';
 import { canAccessAdminSettings } from '@/lib/adminPermissions';
 import {
   ADMIN_ACCOUNTS_CHANGED,
@@ -28,11 +28,9 @@ const AdminSettingsPanel = ({ language }: Props) => {
   const { user } = useAuth();
   const [admins, setAdmins] = useState<AdminAccountRecord[]>([]);
 
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [addAdminOpen, setAddAdminOpen] = useState(false);
+  const [footerOpen, setFooterOpen] = useState(false);
 
   const reload = useCallback(() => setAdmins(listAllAdminAccounts()), []);
 
@@ -55,15 +53,8 @@ const AdminSettingsPanel = ({ language }: Props) => {
       ? {
           passwordTitle: 'كلمة المرور',
           passwordDesc: 'غيّر كلمة مرور حسابك الحالي في لوحة التحكم.',
-          current: 'كلمة المرور الحالية',
-          new: 'كلمة المرور الجديدة',
-          confirm: 'تأكيد كلمة المرور',
-          savePassword: 'حفظ كلمة المرور',
+          changePassword: 'تغيير كلمة المرور',
           passwordSuccess: 'تم تحديث كلمة المرور',
-          wrongCurrent: 'كلمة المرور الحالية غير صحيحة',
-          tooShort: 'كلمة المرور يجب أن تكون 4 أحرف على الأقل',
-          mismatch: 'التأكيد لا يطابق كلمة المرور الجديدة',
-          same: 'اختر كلمة مرور مختلفة',
           adminsTitle: 'مسؤولون إضافيون',
           adminsDesc: 'أضف حسابات أدمن أخرى تستطيع الدخول للوحة التحكم.',
           addBtn: 'إضافة مسؤول',
@@ -74,19 +65,15 @@ const AdminSettingsPanel = ({ language }: Props) => {
           removed: 'تم حذف المسؤول',
           cannotRemovePrimary: 'لا يمكن حذف الحساب الرئيسي',
           loggedInAs: 'مسجّل الدخول كـ',
+          footerTitle: 'فوتر المتجر',
+          footerDesc: 'التواصل، الدعم، العنوان، وساعات العمل في أسفل الصفحات.',
+          editFooter: 'تعديل الفوتر',
         }
       : {
           passwordTitle: 'Password',
           passwordDesc: 'Change the password for your current dashboard account.',
-          current: 'Current password',
-          new: 'New password',
-          confirm: 'Confirm password',
-          savePassword: 'Save password',
+          changePassword: 'Change password',
           passwordSuccess: 'Password updated',
-          wrongCurrent: 'Current password is incorrect',
-          tooShort: 'Password must be at least 4 characters',
-          mismatch: 'Confirmation does not match',
-          same: 'Choose a different password',
           adminsTitle: 'Additional admins',
           adminsDesc: 'Add more admin accounts that can access the dashboard.',
           addBtn: 'Add admin',
@@ -97,35 +84,10 @@ const AdminSettingsPanel = ({ language }: Props) => {
           removed: 'Admin removed',
           cannotRemovePrimary: 'Cannot remove the primary account',
           loggedInAs: 'Signed in as',
+          footerTitle: 'Store footer',
+          footerDesc: 'Contact, support, address, and hours shown at the bottom of pages.',
+          editFooter: 'Edit footer',
         };
-
-  const passwordErrors = {
-    wrong_current: t.wrongCurrent,
-    too_short: t.tooShort,
-    mismatch: t.mismatch,
-    same: t.same,
-    not_found: t.wrongCurrent,
-  };
-
-  const handlePasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user?.username) return;
-    const result = changeAdminPasswordForSession(
-      user.username,
-      currentPassword,
-      newPassword,
-      confirmPassword,
-    );
-    if (result.ok === false) {
-      toast.error(passwordErrors[result.code]);
-      return;
-    }
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-    reload();
-    toast.success(t.passwordSuccess);
-  };
 
   const handleRemove = (id: string) => {
     if (id === PRIMARY_ADMIN_ID) {
@@ -153,54 +115,52 @@ const AdminSettingsPanel = ({ language }: Props) => {
       ) : null}
 
       <Card className="border-border/60 shadow-sm">
-        <CardHeader className="space-y-1 text-start">
-          <CardTitle className="flex items-center gap-2">
-            <Lock className="h-5 w-5 text-primary" aria-hidden />
-            {t.passwordTitle}
-          </CardTitle>
-          <CardDescription>{t.passwordDesc}</CardDescription>
+        <CardHeader className="space-y-1 text-start sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-primary" aria-hidden />
+              {t.passwordTitle}
+            </CardTitle>
+            <CardDescription>{t.passwordDesc}</CardDescription>
+          </div>
+          <Button type="button" className="mt-3 shrink-0 gap-2 sm:mt-0" onClick={() => setPasswordOpen(true)}>
+            <Lock className="h-4 w-4" aria-hidden />
+            {t.changePassword}
+          </Button>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="admin-current-password">{t.current}</Label>
-              <Input
-                id="admin-current-password"
-                type="password"
-                autoComplete="current-password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="admin-new-password">{t.new}</Label>
-              <Input
-                id="admin-new-password"
-                type="password"
-                autoComplete="new-password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={4}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="admin-confirm-password">{t.confirm}</Label>
-              <Input
-                id="admin-confirm-password"
-                type="password"
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={4}
-              />
-            </div>
-            <Button type="submit">{t.savePassword}</Button>
-          </form>
-        </CardContent>
       </Card>
+
+      <ChangePasswordDialog
+        open={passwordOpen}
+        onOpenChange={setPasswordOpen}
+        language={language}
+        onSubmit={(current, newPw, confirm) => {
+          if (!user?.username) return { ok: false as const, code: 'not_found' as const };
+          return changeAdminPasswordForSession(user.username, current, newPw, confirm);
+        }}
+        onSuccess={() => {
+          reload();
+          toast.success(t.passwordSuccess);
+        }}
+      />
+
+      <Card className="border-border/60 shadow-sm">
+        <CardHeader className="space-y-1 text-start sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2">
+              <LayoutTemplate className="h-5 w-5 text-primary" aria-hidden />
+              {t.footerTitle}
+            </CardTitle>
+            <CardDescription>{t.footerDesc}</CardDescription>
+          </div>
+          <Button type="button" variant="outline" className="mt-3 shrink-0 gap-2 sm:mt-0" onClick={() => setFooterOpen(true)}>
+            <LayoutTemplate className="h-4 w-4" aria-hidden />
+            {t.editFooter}
+          </Button>
+        </CardHeader>
+      </Card>
+
+      <EditFooterDialog open={footerOpen} onOpenChange={setFooterOpen} language={language} />
 
       <Card className="border-border/60 shadow-sm">
         <CardHeader className="space-y-1 text-start sm:flex-row sm:items-start sm:justify-between sm:gap-4">

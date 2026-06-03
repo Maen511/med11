@@ -11,12 +11,12 @@ import {
   Megaphone,
   Gift,
   Tag,
-  LayoutTemplate,
   Store,
   Globe,
   LogOut,
   Menu,
   X,
+  Home,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,7 +39,6 @@ export type AdminNavId =
   | 'bonus'
   | 'promotions'
   | 'influencers'
-  | 'footer'
   | 'settings';
 
 type NavItem = {
@@ -58,7 +57,6 @@ const NAV: NavItem[] = [
   { id: 'bonus', icon: Gift, labelEn: 'Bonus', labelAr: 'بونص' },
   { id: 'promotions', icon: Megaphone, labelEn: 'Promotions', labelAr: 'الإعلانات' },
   { id: 'influencers', icon: Tag, labelEn: 'Influencer codes', labelAr: 'أكواد الإنفلونسر' },
-  { id: 'footer', icon: LayoutTemplate, labelEn: 'Footer', labelAr: 'الفوتر' },
   { id: 'settings', icon: Settings, labelEn: 'Settings', labelAr: 'الإعدادات' },
 ];
 
@@ -207,6 +205,17 @@ const AdminLayout = ({
         </nav>
 
         <div className="space-y-2 border-t border-white/10 p-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start gap-2 text-zinc-300 hover:bg-white/10 hover:text-white"
+            asChild
+          >
+            <Link to="/" onClick={() => setSidebarOpen(false)}>
+              <Home className="h-4 w-4" />
+              {isRtl ? 'الصفحة الرئيسية' : 'Home'}
+            </Link>
+          </Button>
           <Button
             variant="ghost"
             size="sm"

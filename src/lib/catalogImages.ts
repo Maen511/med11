@@ -46,6 +46,18 @@ export function getCachedCatalogImage(productId: number): string | null {
   return resolvedBlobUrls.get(productId) ?? null;
 }
 
+/** Image ref for invoice / order history lines (stored hint, then live catalog). */
+export function resolveStoredLineImage(productId: number, storedImage?: string | null): string {
+  const hint = (storedImage ?? '').trim();
+  if (hint && !hint.startsWith('blob:') && !hint.includes('images.unsplash.com')) {
+    return persistableCartImage(productId, hint);
+  }
+  const raw = getRawCatalogProduct(productId);
+  if (raw?.image?.trim()) return persistableCartImage(productId, raw.image);
+  const live = getProductById(productId);
+  return persistableCartImage(productId, live?.image);
+}
+
 /** Store a resolvable image ref in cart/localStorage (not ephemeral blob URLs). */
 export function persistableCartImage(productId: number, image?: string | null): string {
   const value = (image ?? '').trim();
@@ -90,33 +102,42 @@ export async function resolveCatalogImage(productId: number, image: string): Pro
   return blobUrl;
 }
 
+export type ResolveCartImageOptions = {
+  /** When false, return empty string instead of generic Unsplash placeholders. */
+  allowPlaceholder?: boolean;
+};
+
 /** عرض السلة — يحل من الكاش أو الكتالوج أو IndexedDB */
 export async function resolveCartProductImage(
   productId: number,
   imageHint?: string | null,
+  options?: ResolveCartImageOptions,
 ): Promise<string> {
+  const allowPlaceholder = options?.allowPlaceholder !== false;
   const cached = getCachedCatalogImage(productId);
   if (cached) return cached;
 
   const hint = (imageHint ?? '').trim();
   if (hint && !hint.startsWith('blob:') && parseCatalogImageRef(hint) === null) {
-    return hint;
+    if (!hint.includes('images.unsplash.com')) return hint;
   }
 
   const raw = getRawCatalogProduct(productId);
   const catalogImage = raw?.image?.trim();
-  if (catalogImage) {
-    return resolveCatalogImage(productId, catalogImage);
+  if (catalogImage && !catalogImage.includes('images.unsplash.com')) {
+    const resolved = await resolveCatalogImage(productId, catalogImage);
+    if (resolved && !resolved.includes('images.unsplash.com')) return resolved;
   }
 
-  if (hint && !hint.startsWith('blob:')) {
-    return resolveCatalogImage(productId, hint);
+  if (hint && !hint.startsWith('blob:') && parseCatalogImageRef(hint) !== null) {
+    const resolved = await resolveCatalogImage(productId, hint);
+    if (resolved && !resolved.includes('images.unsplash.com')) return resolved;
   }
 
   const bioskin = bioskinImageFallback(productId);
   if (bioskin) return bioskin;
 
-  return getProductPlaceholderImage(productId);
+  return allowPlaceholder ? getProductPlaceholderImage(productId) : '';
 }
 
 export async function prefetchCartProductImages(productIds: number[]): Promise<void> {

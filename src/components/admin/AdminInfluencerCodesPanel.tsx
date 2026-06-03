@@ -7,6 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import {
   deleteInfluencerCode,
@@ -38,6 +46,8 @@ import { formatDateTime } from '@/lib/formatNumbers';
 type Props = {
   language: 'en' | 'ar';
 };
+
+type DialogMode = 'create' | 'edit';
 
 const DEFAULT_LIST_FILTER = (): InfluencerCodeListFilter => ({
   query: '',
@@ -81,6 +91,8 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
   const isRtl = language === 'ar';
   const [codes, setCodes] = useState<InfluencerCode[]>(() => readInfluencerCodes());
   const [form, setForm] = useState(emptyForm);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<DialogMode>('create');
   const [saveBusy, setSaveBusy] = useState(false);
   const [listFilter, setListFilter] = useState<InfluencerCodeListFilter>(DEFAULT_LIST_FILTER);
   const [sections, setSections] = useState(() => getCatalogSections());
@@ -138,7 +150,8 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
           list: 'الأكواد المحفوظة',
           uses: 'الاستخدام',
           noExpiry: 'بدون انتهاء',
-          empty: 'لا توجد أكواد بعد. أنشئ أول كود من النموذج.',
+          empty: 'لا توجد أكواد بعد. اضغط «كود جديد» لإنشاء أول كود.',
+          dialogDesc: 'يُدخل العميل الكود عند الدفع — حدّد الخصم والقسم والصلاحية.',
           saved: 'تم حفظ الكود',
           deleted: 'تم حذف الكود',
           duplicate: 'هذا الكود مستخدم مسبقاً',
@@ -201,7 +214,8 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
           list: 'Saved codes',
           uses: 'Usage',
           noExpiry: 'No expiry',
-          empty: 'No codes yet. Create your first code using the form.',
+          empty: 'No codes yet. Tap «New code» to create your first one.',
+          dialogDesc: 'Customers enter this at checkout — set discount, section scope, and limits.',
           saved: 'Code saved',
           deleted: 'Code deleted',
           duplicate: 'This code already exists',
@@ -241,11 +255,22 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
           expired: 'Expired',
         };
 
-  const editing = Boolean(form.id);
+  const editing = dialogMode === 'edit' && Boolean(form.id);
 
   const resetForm = () => setForm(emptyForm());
 
-  const startEdit = (row: InfluencerCode) => {
+  const closeDialog = () => {
+    setDialogOpen(false);
+    resetForm();
+  };
+
+  const openCreateDialog = () => {
+    resetForm();
+    setDialogMode('create');
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (row: InfluencerCode) => {
     setForm({
       id: row.id,
       code: row.code,
@@ -266,7 +291,8 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
       sectionScope: row.sectionScope,
       sectionId: row.sectionId ?? '',
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setDialogMode('edit');
+    setDialogOpen(true);
   };
 
   const handleSave = async () => {
@@ -328,7 +354,7 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
         usedCount: existing?.usedCount,
       });
       toast.success(t.saved);
-      resetForm();
+      closeDialog();
       reload();
     } catch (err) {
       const msg =
@@ -346,7 +372,7 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
   const handleDelete = (id: string) => {
     deleteInfluencerCode(id);
     toast.success(t.deleted);
-    if (form.id === id) resetForm();
+    if (form.id === id) closeDialog();
     reload();
   };
 
@@ -387,9 +413,184 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
 
   const recentUnread = promoNotifications.filter((n) => !n.read).slice(0, 5);
 
+  const formBody = (
+    <div className="grid gap-4 md:grid-cols-2 md:items-stretch">
+      <FormSection title={t.formBasic} className="h-full">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="inf-code">{t.code}</Label>
+            <Input
+              id="inf-code"
+              value={form.code}
+              onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
+              placeholder="BIOSKIN10"
+              className="font-mono uppercase"
+              dir="ltr"
+              readOnly={editing}
+            />
+            <p className="text-[11px] text-muted-foreground">{t.codeHint}</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="inf-name">{t.influencer}</Label>
+            <Input
+              id="inf-name"
+              value={form.influencerName}
+              onChange={(e) => setForm((f) => ({ ...f, influencerName: e.target.value }))}
+              placeholder={language === 'ar' ? 'سارة' : 'Sara'}
+            />
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection title={t.formDiscount} className="h-full">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>{t.discountType}</Label>
+            <Select
+              value={form.discountType}
+              onValueChange={(v) => setForm((f) => ({ ...f, discountType: v as InfluencerDiscountType }))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="z-[200]">
+                <SelectItem value="percent">{t.percent}</SelectItem>
+                <SelectItem value="fixed">{t.fixed}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="inf-value">{t.value}</Label>
+            <Input
+              id="inf-value"
+              type="number"
+              min={1}
+              max={form.discountType === 'percent' ? 100 : undefined}
+              value={form.discountValue}
+              onChange={(e) => setForm((f) => ({ ...f, discountValue: e.target.value }))}
+            />
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection
+        title={t.formScope}
+        className={cn('h-full', form.sectionScope === 'section' && 'md:col-span-2')}
+      >
+        <div
+          className={cn(
+            'grid gap-3',
+            form.sectionScope === 'section' ? 'sm:grid-cols-2' : 'grid-cols-1',
+          )}
+        >
+          <div className="space-y-1.5">
+            <Select
+              value={form.sectionScope}
+              onValueChange={(v) =>
+                setForm((f) => ({
+                  ...f,
+                  sectionScope: v as InfluencerSectionScope,
+                  sectionId: v === 'all' ? '' : f.sectionId,
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="z-[200]">
+                <SelectItem value="all">{t.sectionAll}</SelectItem>
+                <SelectItem value="section">{t.sectionOne}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {form.sectionScope === 'section' ? (
+            <div className="space-y-1.5">
+              <Label>{t.pickSection}</Label>
+              <Select
+                value={form.sectionId || undefined}
+                onValueChange={(v) => setForm((f) => ({ ...f, sectionId: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t.pickSection} />
+                </SelectTrigger>
+                <SelectContent className="z-[200]">
+                  {sections.map((sec) => (
+                    <SelectItem key={sec.id} value={sec.id}>
+                      {sec.title[language] || sec.title.en || sec.id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
+        </div>
+      </FormSection>
+
+      <FormSection
+        title={t.formLimits}
+        className={cn('h-full', form.sectionScope === 'section' && 'md:col-span-2')}
+      >
+        <div
+          className={cn(
+            'grid gap-3 sm:items-end',
+            form.sectionScope === 'section' ? 'sm:grid-cols-3' : 'sm:grid-cols-2',
+          )}
+        >
+          <div className="space-y-1.5">
+            <Label htmlFor="inf-expiry">
+              {t.expiry}{' '}
+              <span className="font-normal text-muted-foreground">({t.optional})</span>
+            </Label>
+            <Input
+              id="inf-expiry"
+              type="date"
+              value={form.expiresAt}
+              onChange={(e) => setForm((f) => ({ ...f, expiresAt: e.target.value }))}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="inf-max">
+              {t.maxUses}{' '}
+              <span className="font-normal text-muted-foreground">({t.optional})</span>
+            </Label>
+            <Input
+              id="inf-max"
+              type="number"
+              min={1}
+              value={form.maxUses}
+              onChange={(e) => setForm((f) => ({ ...f, maxUses: e.target.value }))}
+              placeholder="∞"
+            />
+          </div>
+          <div
+            className={cn(
+              'flex items-center justify-between gap-3 rounded-md border border-border/50 bg-background/80 px-3 py-2.5',
+              form.sectionScope === 'section' ? '' : 'sm:col-span-2',
+            )}
+          >
+            <Label htmlFor="inf-enabled" className="cursor-pointer text-sm">
+              {t.enabled}
+            </Label>
+            <Switch
+              id="inf-enabled"
+              checked={form.enabled}
+              onCheckedChange={(checked) => setForm((f) => ({ ...f, enabled: checked }))}
+            />
+          </div>
+        </div>
+      </FormSection>
+    </div>
+  );
+
   return (
-    <div className="space-y-6" dir={isRtl ? 'rtl' : 'ltr'}>
-      <p className="text-sm text-muted-foreground text-start">{t.pageDesc}</p>
+    <div className="mx-auto max-w-5xl space-y-6" dir={isRtl ? 'rtl' : 'ltr'} lang={isRtl ? 'ar' : 'en'}>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="max-w-xl text-sm text-muted-foreground text-start">{t.pageDesc}</p>
+        <Button type="button" className="btn-primary shrink-0 gap-2" onClick={openCreateDialog}>
+          <Plus className="h-4 w-4" aria-hidden />
+          {t.newCode}
+        </Button>
+      </div>
 
       {promoUnread > 0 ? (
         <Card className="border-violet-500/30 bg-violet-500/5 shadow-sm">
@@ -457,194 +658,7 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
         ))}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,22rem)_1fr] xl:items-start">
-        <Card
-          className={cn(
-            'xl:sticky xl:top-4 shadow-sm',
-            editing && 'ring-2 ring-primary/40 border-primary/30',
-          )}
-        >
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-base text-start">
-              <Tag className="h-5 w-5 shrink-0 text-primary" />
-              {editing ? t.editCode : t.newCode}
-            </CardTitle>
-            {editing ? (
-              <CardDescription className="text-start font-mono text-xs" dir="ltr">
-                {form.code}
-              </CardDescription>
-            ) : null}
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormSection title={t.formBasic}>
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="inf-code">{t.code}</Label>
-                  <Input
-                    id="inf-code"
-                    value={form.code}
-                    onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
-                    placeholder="BIOSKIN10"
-                    className="font-mono uppercase"
-                    dir="ltr"
-                  />
-                  <p className="text-[11px] text-muted-foreground">{t.codeHint}</p>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="inf-name">{t.influencer}</Label>
-                  <Input
-                    id="inf-name"
-                    value={form.influencerName}
-                    onChange={(e) => setForm((f) => ({ ...f, influencerName: e.target.value }))}
-                    placeholder={language === 'ar' ? 'سارة' : 'Sara'}
-                  />
-                </div>
-              </div>
-            </FormSection>
-
-            <FormSection title={t.formDiscount}>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label>{t.discountType}</Label>
-                  <Select
-                    value={form.discountType}
-                    onValueChange={(v) =>
-                      setForm((f) => ({ ...f, discountType: v as InfluencerDiscountType }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="percent">{t.percent}</SelectItem>
-                      <SelectItem value="fixed">{t.fixed}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label htmlFor="inf-value">{t.value}</Label>
-                  <Input
-                    id="inf-value"
-                    type="number"
-                    min={1}
-                    max={form.discountType === 'percent' ? 100 : undefined}
-                    value={form.discountValue}
-                    onChange={(e) => setForm((f) => ({ ...f, discountValue: e.target.value }))}
-                  />
-                </div>
-              </div>
-            </FormSection>
-
-            <FormSection title={t.formScope}>
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Select
-                    value={form.sectionScope}
-                    onValueChange={(v) =>
-                      setForm((f) => ({
-                        ...f,
-                        sectionScope: v as InfluencerSectionScope,
-                        sectionId: v === 'all' ? '' : f.sectionId,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{t.sectionAll}</SelectItem>
-                      <SelectItem value="section">{t.sectionOne}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {form.sectionScope === 'section' ? (
-                  <div className="space-y-1.5">
-                    <Label>{t.pickSection}</Label>
-                    <Select
-                      value={form.sectionId || undefined}
-                      onValueChange={(v) => setForm((f) => ({ ...f, sectionId: v }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t.pickSection} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sections.map((sec) => (
-                          <SelectItem key={sec.id} value={sec.id}>
-                            {sec.title[language] || sec.title.en || sec.id}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : null}
-              </div>
-            </FormSection>
-
-            <FormSection title={t.formLimits}>
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="inf-expiry">
-                    {t.expiry}{' '}
-                    <span className="font-normal text-muted-foreground">({t.optional})</span>
-                  </Label>
-                  <Input
-                    id="inf-expiry"
-                    type="date"
-                    value={form.expiresAt}
-                    onChange={(e) => setForm((f) => ({ ...f, expiresAt: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="inf-max">
-                    {t.maxUses}{' '}
-                    <span className="font-normal text-muted-foreground">({t.optional})</span>
-                  </Label>
-                  <Input
-                    id="inf-max"
-                    type="number"
-                    min={1}
-                    value={form.maxUses}
-                    onChange={(e) => setForm((f) => ({ ...f, maxUses: e.target.value }))}
-                    placeholder="∞"
-                  />
-                </div>
-                <div className="flex items-center justify-between gap-3 rounded-md border border-border/50 bg-background/80 px-3 py-2.5">
-                  <Label htmlFor="inf-enabled" className="cursor-pointer text-sm">
-                    {t.enabled}
-                  </Label>
-                  <Switch
-                    id="inf-enabled"
-                    checked={form.enabled}
-                    onCheckedChange={(checked) => setForm((f) => ({ ...f, enabled: checked }))}
-                  />
-                </div>
-              </div>
-            </FormSection>
-
-            <div className="flex flex-col gap-2 pt-1 sm:flex-row">
-              <Button
-                type="button"
-                className="flex-1 gap-2"
-                onClick={() => void handleSave()}
-                disabled={saveBusy}
-              >
-                {saveBusy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Plus className="h-4 w-4" />
-                )}
-                {t.save}
-              </Button>
-              {editing ? (
-                <Button type="button" variant="outline" className="sm:px-6" onClick={resetForm}>
-                  {t.cancel}
-                </Button>
-              ) : null}
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-4 min-w-0">
+      <div className="space-y-4 min-w-0">
           <Card className="shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -764,17 +778,32 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
           </Card>
 
           <Card className="shadow-sm">
-            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 pb-3">
-              <CardTitle className="text-base text-start">{t.list}</CardTitle>
-              {sortedCodes.length > 0 ? (
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {t.showingCount} {formatNumber(filteredCodes.length)} / {formatNumber(sortedCodes.length)}
-                </span>
-              ) : null}
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 pb-3">
+              <div className="min-w-0 space-y-0.5 text-start">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Tag className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+                  {t.list}
+                </CardTitle>
+                {sortedCodes.length > 0 ? (
+                  <CardDescription className="tabular-nums">
+                    {t.showingCount} {formatNumber(filteredCodes.length)} / {formatNumber(sortedCodes.length)}
+                  </CardDescription>
+                ) : null}
+              </div>
+              <Button type="button" variant="outline" size="sm" className="shrink-0 gap-1.5" onClick={openCreateDialog}>
+                <Plus className="h-4 w-4" aria-hidden />
+                {t.newCode}
+              </Button>
             </CardHeader>
             <CardContent className="p-0 sm:p-0">
               {sortedCodes.length === 0 ? (
-                <p className="px-6 pb-6 text-sm text-muted-foreground text-start">{t.empty}</p>
+                <div className="flex flex-col items-center gap-4 px-6 py-10 text-center">
+                  <p className="text-sm text-muted-foreground">{t.empty}</p>
+                  <Button type="button" className="btn-primary gap-2" onClick={openCreateDialog}>
+                    <Plus className="h-4 w-4" aria-hidden />
+                    {t.newCode}
+                  </Button>
+                </div>
               ) : filteredCodes.length === 0 ? (
                 <p className="px-6 pb-6 text-sm text-muted-foreground text-start">{t.noFilterMatch}</p>
               ) : (
@@ -794,7 +823,6 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
                     </div>
                     <ul className="divide-y divide-border/60">
                       {filteredCodes.map((row) => {
-                        const isRowEditing = form.id === row.id;
                         const expired = isInfluencerCodeExpired(row);
                         const sectionLabel = formatInfluencerCodeSectionLabel(
                           row,
@@ -806,8 +834,7 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
                             key={row.id}
                             role="row"
                             className={cn(
-                              'grid grid-cols-[minmax(7rem,1.1fr)_minmax(6rem,1fr)_5rem_minmax(5rem,0.9fr)_4.5rem_minmax(6.5rem,auto)_auto] gap-3 items-center px-4 py-3 text-sm transition-colors',
-                              isRowEditing && 'bg-primary/5',
+                              'grid grid-cols-[minmax(7rem,1.1fr)_minmax(6rem,1fr)_5rem_minmax(5rem,0.9fr)_4.5rem_minmax(6.5rem,auto)_auto] gap-3 items-center px-4 py-3 text-sm transition-colors hover:bg-muted/20',
                               !row.enabled && 'opacity-75',
                             )}
                           >
@@ -853,10 +880,10 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
                               />
                               <Button
                                 type="button"
-                                variant={isRowEditing ? 'default' : 'ghost'}
+                                variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
-                                onClick={() => startEdit(row)}
+                                onClick={() => openEditDialog(row)}
                               >
                                 <Pencil className="h-4 w-4" />
                                 <span className="sr-only">{t.edit}</span>
@@ -880,8 +907,43 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
               )}
             </CardContent>
           </Card>
-        </div>
       </div>
+
+      <Dialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          if (!open) closeDialog();
+        }}
+      >
+        <DialogContent
+          className="max-w-[min(52rem,96vw)] gap-0 overflow-visible p-0 sm:max-w-4xl"
+          dir={isRtl ? 'rtl' : 'ltr'}
+          lang={isRtl ? 'ar' : 'en'}
+        >
+          <DialogHeader className="space-y-1 border-b border-border/60 px-5 py-4 text-start sm:px-6">
+            <DialogTitle className="flex items-center gap-2">
+              <Tag className="h-5 w-5 text-primary" aria-hidden />
+              {editing ? t.editCode : t.newCode}
+            </DialogTitle>
+            <DialogDescription>{t.dialogDesc}</DialogDescription>
+            {editing && form.code ? (
+              <p className="font-mono text-xs text-muted-foreground" dir="ltr">
+                {form.code}
+              </p>
+            ) : null}
+          </DialogHeader>
+          <div className="px-5 py-4 sm:px-6">{formBody}</div>
+          <DialogFooter className="gap-2 border-t border-border/60 bg-muted/15 px-5 py-4 sm:justify-end sm:px-6">
+            <Button type="button" variant="outline" onClick={closeDialog} disabled={saveBusy}>
+              {t.cancel}
+            </Button>
+            <Button type="button" className="btn-primary gap-2" onClick={() => void handleSave()} disabled={saveBusy}>
+              {saveBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+              {t.save}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

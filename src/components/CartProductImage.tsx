@@ -12,10 +12,19 @@ type CartProductImageProps = {
   image: string;
   alt: string;
   className?: string;
+  /** When false, never show generic stock photos — only real catalog / BIOSKIN assets. */
+  allowPlaceholder?: boolean;
 };
 
-export function CartProductImage({ productId, image, alt, className }: CartProductImageProps) {
-  const placeholder = getProductPlaceholderImage(productId);
+export function CartProductImage({
+  productId,
+  image,
+  alt,
+  className,
+  allowPlaceholder = true,
+}: CartProductImageProps) {
+  const placeholder = allowPlaceholder ? getProductPlaceholderImage(productId) : '';
+  const resolveOpts = { allowPlaceholder };
   const [src, setSrc] = useState(() => getCachedCatalogImage(productId) ?? placeholder);
 
   const load = useCallback(async () => {
@@ -24,9 +33,9 @@ export function CartProductImage({ productId, image, alt, className }: CartProdu
       setSrc(cached);
       return;
     }
-    const resolved = await resolveCartProductImage(productId, image);
+    const resolved = await resolveCartProductImage(productId, image, resolveOpts);
     setSrc(resolved || placeholder);
-  }, [productId, image, placeholder]);
+  }, [productId, image, placeholder, allowPlaceholder]);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,13 +45,13 @@ export function CartProductImage({ productId, image, alt, className }: CartProdu
         setSrc(cached);
         return;
       }
-      const resolved = await resolveCartProductImage(productId, image);
+      const resolved = await resolveCartProductImage(productId, image, resolveOpts);
       if (!cancelled) setSrc(resolved || placeholder);
     })();
     return () => {
       cancelled = true;
     };
-  }, [productId, image, placeholder]);
+  }, [productId, image, placeholder, allowPlaceholder]);
 
   useEffect(() => {
     const onHydrated = () => {
@@ -53,9 +62,23 @@ export function CartProductImage({ productId, image, alt, className }: CartProdu
   }, [load]);
 
   const onImgError = () => {
+    if (!allowPlaceholder) {
+      setSrc('');
+      return;
+    }
     const fallback = getProductPlaceholderImage(productId);
     if (src !== fallback) setSrc(fallback);
   };
+
+  if (!src) {
+    return (
+      <div
+        className={cn('flex items-center justify-center bg-muted/50 text-muted-foreground', className)}
+        role="img"
+        aria-label={alt}
+      />
+    );
+  }
 
   return (
     <img

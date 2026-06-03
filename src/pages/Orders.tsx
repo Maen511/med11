@@ -13,8 +13,8 @@ import {
   type StoredInvoice,
 } from '@/lib/invoices';
 import { getProductById } from '@/lib/products';
-import { getProductPlaceholderImage } from '@/lib/productPlaceholders';
 import { CartProductImage } from '@/components/CartProductImage';
+import { CATALOG_IMAGES_HYDRATED_EVENT, prefetchCartProductImages, resolveStoredLineImage } from '@/lib/catalogImages';
 import { CheckCircle2, Clock, Truck, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BankTransferPaymentPanel } from '@/components/BankTransferPaymentPanel';
@@ -38,6 +38,18 @@ const Orders = () => {
 
   useEffect(() => {
     setInvoices(getInvoicesForCustomer(user?.email, user?.username));
+  }, [user?.email, user?.username]);
+
+  useEffect(() => {
+    const ids = invoices.flatMap((inv) => inv.items.map((it) => it.id));
+    if (ids.length === 0) return;
+    void prefetchCartProductImages(ids);
+  }, [invoices]);
+
+  useEffect(() => {
+    const refresh = () => setInvoices(getInvoicesForCustomer(user?.email, user?.username));
+    window.addEventListener(CATALOG_IMAGES_HYDRATED_EVENT, refresh);
+    return () => window.removeEventListener(CATALOG_IMAGES_HYDRATED_EVENT, refresh);
   }, [user?.email, user?.username]);
 
   const filteredInvoices = useMemo(
@@ -181,7 +193,7 @@ const Orders = () => {
                                     typeof it.name === 'object' ? it.name : { en: String(it.name ?? ''), ar: String(it.name ?? '') },
                                     language,
                                   );
-                              const image = prod?.image ?? getProductPlaceholderImage(it.id);
+                              const image = resolveStoredLineImage(it.id, it.image);
                               const lineTotal = it.qty * it.price;
                               return (
                                 <li key={`${inv.id}-${idx}-${it.id}`}>
@@ -194,6 +206,7 @@ const Orders = () => {
                                         productId={it.id}
                                         image={image}
                                         alt={name}
+                                        allowPlaceholder={false}
                                         className="h-16 w-16 object-cover transition duration-300 group-hover:scale-105 sm:h-[4.5rem] sm:w-[4.5rem]"
                                       />
                                     </div>

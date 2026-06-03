@@ -3,6 +3,7 @@ import { normalizeCartVariant, cartVariantKey, getPriceForMode, resolveCartLineV
 import { catalogImageRef, getRawCatalogProduct, persistableCartImage } from '@/lib/catalogImages';
 
 export const SECTION_BONUS_KEY = 'med-section-bonus';
+export const SECTION_BONUS_LAST_USED_KEY = 'med-section-bonus-last-used';
 export const SECTION_BONUS_CHANGED = 'med-section-bonus-changed';
 
 export type SectionBonusSaleMode = 'unit' | 'box';
@@ -182,9 +183,72 @@ export function readSectionBonusConfig(): SectionBonusConfig {
   }
 }
 
+export type SectionBonusLastUsed = {
+  savedAt: string;
+  config: SectionBonusConfig;
+};
+
+export function cloneSectionBonusConfig(config: SectionBonusConfig): SectionBonusConfig {
+  const merged = mergeConfig(config);
+  return {
+    ...merged,
+    unitTiers: merged.unitTiers.map((t) => ({ ...t })),
+    boxTiers: merged.boxTiers.map((t) => ({ ...t })),
+  };
+}
+
+function sectionBonusConfigSignature(config: SectionBonusConfig): string {
+  const c = mergeConfig(config);
+  return JSON.stringify({
+    enabled: c.enabled,
+    sectionId: c.sectionId,
+    unitBonusEnabled: c.unitBonusEnabled,
+    boxBonusEnabled: c.boxBonusEnabled,
+    unitsPerBox: c.unitsPerBox,
+    unitTiers: c.unitTiers,
+    boxTiers: c.boxTiers,
+  });
+}
+
+function saveLastUsedSectionBonus(config: SectionBonusConfig) {
+  const entry: SectionBonusLastUsed = {
+    savedAt: new Date().toISOString(),
+    config: cloneSectionBonusConfig(config),
+  };
+  try {
+    localStorage.setItem(SECTION_BONUS_LAST_USED_KEY, JSON.stringify(entry));
+  } catch {}
+}
+
+export function readLastUsedSectionBonusConfig(): SectionBonusLastUsed | null {
+  try {
+    const raw = localStorage.getItem(SECTION_BONUS_LAST_USED_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SectionBonusLastUsed;
+    if (!parsed?.config) return null;
+    return {
+      savedAt: typeof parsed.savedAt === 'string' ? parsed.savedAt : new Date().toISOString(),
+      config: mergeConfig(parsed.config),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function restoreLastUsedSectionBonusConfig(): boolean {
+  const last = readLastUsedSectionBonusConfig();
+  if (!last) return false;
+  return writeSectionBonusConfig({ ...cloneSectionBonusConfig(last.config), enabled: true });
+}
+
 export function writeSectionBonusConfig(config: SectionBonusConfig): boolean {
   try {
-    localStorage.setItem(SECTION_BONUS_KEY, JSON.stringify(mergeConfig(config)));
+    const previous = readSectionBonusConfig();
+    const next = mergeConfig(config);
+    if (previous.enabled && sectionBonusConfigSignature(previous) !== sectionBonusConfigSignature(next)) {
+      saveLastUsedSectionBonus(previous);
+    }
+    localStorage.setItem(SECTION_BONUS_KEY, JSON.stringify(next));
     window.dispatchEvent(new CustomEvent(SECTION_BONUS_CHANGED));
     return true;
   } catch {

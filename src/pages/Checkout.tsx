@@ -17,18 +17,23 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ShoppingBag, MapPin, Trash2, Heart, Pencil } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, MapPin, Trash2, Heart, Pencil, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { toast } from 'sonner';
 import { addMockOrder } from '@/lib/catalog';
-import { appendInvoice } from '@/lib/invoices';
+import { appendInvoice, getInvoicesForCustomer } from '@/lib/invoices';
 import { notifyAdminNewOrder } from '@/lib/adminOrderNotifications';
 import { notifyAdminPromoCodeUse } from '@/lib/adminPromoCodeNotifications';
 import { CartProductImage } from '@/components/CartProductImage';
-import { persistableCartImage, prefetchCartProductImages } from '@/lib/catalogImages';
+import {
+  CATALOG_IMAGES_HYDRATED_EVENT,
+  persistableCartImage,
+  prefetchCartProductImages,
+  resolveStoredLineImage,
+} from '@/lib/catalogImages';
 import CurrencyIcon from '@/components/CurrencyIcon';
 import { getProductById, getSectionIdForProduct } from '@/lib/products';
 import { useMergedCatalog } from '@/hooks/useMergedCatalog';
@@ -59,6 +64,8 @@ import {
   type AppliedInfluencerCode,
 } from '@/lib/influencerCodes';
 import { formatNumber } from '@/lib/formatNumbers';
+import { cn } from '@/lib/utils';
+
 type CheckoutSuggestProduct = {
   id: number;
   name: { en: string; ar: string };
@@ -68,13 +75,109 @@ type CheckoutSuggestProduct = {
   inStock?: boolean;
 };
 
-function CheckoutSuggestRail({
+function CheckoutSuggestProductCard({
+  product: p,
+  language,
+  currencyTitle,
+  onAdd,
+  addLabel,
+  soldOutLabel,
+  boxed,
+}: {
+  product: CheckoutSuggestProduct;
+  language: 'en' | 'ar';
+  currencyTitle: string;
+  onAdd: (p: CheckoutSuggestProduct) => void;
+  addLabel: string;
+  soldOutLabel: string;
+  boxed?: boolean;
+}) {
+  const inStock = p.inStock !== false;
+  const title = p.name[language];
+
+  if (boxed) {
+    return (
+      <article
+        className="checkout-suggest-box group flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card text-start shadow-sm transition-all duration-300 hover:border-primary/35 hover:shadow-md dark:hover:border-accent/40"
+        dir={language === 'ar' ? 'rtl' : 'ltr'}
+      >
+        <Link
+          to={`/product/${p.id}`}
+          className="relative block aspect-[4/3] w-full shrink-0 overflow-hidden bg-muted/30"
+        >
+          <CartProductImage
+            productId={p.id}
+            image={p.image}
+            alt={title}
+            allowPlaceholder={false}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+        </Link>
+        <div className="flex min-h-0 flex-1 flex-col gap-2.5 p-3 sm:p-3.5">
+          <Link to={`/product/${p.id}`} className="min-h-[2.75rem] hover:text-primary">
+            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">{title}</h3>
+          </Link>
+          <p className="text-base font-bold text-primary" dir="ltr">
+            {p.price}{' '}
+            <CurrencyIcon className="inline-block h-4 w-4 align-[-2px]" title={currencyTitle} />
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            className="btn-primary mt-auto h-10 w-full gap-1.5 text-xs sm:text-sm"
+            disabled={!inStock}
+            onClick={() => onAdd(p)}
+          >
+            <ShoppingCart className="h-4 w-4 shrink-0" aria-hidden />
+            {inStock ? addLabel : soldOutLabel}
+          </Button>
+        </div>
+      </article>
+    );
+  }
+
+  return (
+    <article
+      className="checkout-suggest-card flex w-[min(72vw,10.75rem)] shrink-0 snap-center flex-col gap-2 rounded-xl border border-border/50 bg-card/80 p-2.5 text-start shadow-sm"
+      dir={language === 'ar' ? 'rtl' : 'ltr'}
+    >
+      <Link
+        to={`/product/${p.id}`}
+        className="relative mx-auto aspect-square w-full max-w-[7.5rem] overflow-hidden rounded-lg border border-border/40 bg-muted/30"
+      >
+        <CartProductImage
+          productId={p.id}
+          image={p.image}
+          alt={title}
+          className="h-full w-full p-1.5"
+        />
+      </Link>
+      <h3 className="line-clamp-2 min-h-[2.5rem] text-xs font-semibold leading-snug text-foreground">{title}</h3>
+      <p className="text-sm font-semibold text-primary" dir="ltr">
+        {p.price}{' '}
+        <CurrencyIcon className="inline-block h-3.5 w-3.5 align-[-1px]" title={currencyTitle} />
+      </p>
+      <Button
+        type="button"
+        size="sm"
+        className="btn-primary mt-auto h-9 w-full text-xs"
+        disabled={!inStock}
+        onClick={() => onAdd(p)}
+      >
+        {inStock ? addLabel : soldOutLabel}
+      </Button>
+    </article>
+  );
+}
+
+function CheckoutSuggestProducts({
   products,
   language,
   currencyTitle,
   onAdd,
   addLabel,
   soldOutLabel,
+  layout = 'rail',
 }: {
   products: CheckoutSuggestProduct[];
   language: 'en' | 'ar';
@@ -82,8 +185,33 @@ function CheckoutSuggestRail({
   onAdd: (p: CheckoutSuggestProduct) => void;
   addLabel: string;
   soldOutLabel: string;
+  layout?: 'rail' | 'grid';
 }) {
   if (products.length === 0) return null;
+
+  if (layout === 'grid') {
+    return (
+      <div
+        className={cn(
+          'checkout-suggest-grid grid gap-3 sm:gap-4',
+          products.length === 1 ? 'grid-cols-1 max-w-xs' : 'grid-cols-2 lg:grid-cols-3',
+        )}
+      >
+        {products.map((p) => (
+          <CheckoutSuggestProductCard
+            key={p.id}
+            product={p}
+            language={language}
+            currencyTitle={currencyTitle}
+            onAdd={onAdd}
+            addLabel={addLabel}
+            soldOutLabel={soldOutLabel}
+            boxed
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -91,36 +219,15 @@ function CheckoutSuggestRail({
       dir="ltr"
     >
       {products.map((p) => (
-        <article
+        <CheckoutSuggestProductCard
           key={p.id}
-          className="checkout-suggest-card flex w-[min(72vw,10.75rem)] shrink-0 snap-center flex-col gap-2 rounded-xl border border-border/50 bg-card/80 p-2.5 text-start shadow-sm"
-          dir={language === 'ar' ? 'rtl' : 'ltr'}
-        >
-          <div className="relative mx-auto aspect-square w-full max-w-[7.5rem] overflow-hidden rounded-lg border border-border/40 bg-muted/30">
-            <CartProductImage
-              productId={p.id}
-              image={p.image}
-              alt={p.name[language]}
-              className="h-full w-full p-1.5"
-            />
-          </div>
-          <h3 className="line-clamp-2 min-h-[2.5rem] text-xs font-semibold leading-snug text-foreground">
-            {p.name[language]}
-          </h3>
-          <p className="text-sm font-semibold text-primary" dir="ltr">
-            {p.price}{' '}
-            <CurrencyIcon className="inline-block h-3.5 w-3.5 align-[-1px]" title={currencyTitle} />
-          </p>
-          <Button
-            type="button"
-            size="sm"
-            className="btn-primary mt-auto h-9 w-full text-xs"
-            disabled={p.inStock === false}
-            onClick={() => onAdd(p)}
-          >
-            {p.inStock !== false ? addLabel : soldOutLabel}
-          </Button>
-        </article>
+          product={p}
+          language={language}
+          currencyTitle={currencyTitle}
+          onAdd={onAdd}
+          addLabel={addLabel}
+          soldOutLabel={soldOutLabel}
+        />
       ))}
     </div>
   );
@@ -148,6 +255,7 @@ const Checkout: React.FC = () => {
   const [addressPickerOpen, setAddressPickerOpen] = useState(false);
   const [confirmOrderOpen, setConfirmOrderOpen] = useState(false);
   const [wishlistTick, setWishlistTick] = useState(0);
+  const [lastPurchaseTick, setLastPurchaseTick] = useState(0);
   const [appliedPromo, setAppliedPromo] = useState<AppliedInfluencerCode | null>(null);
 
   const promoCartLines = useMemo(
@@ -173,6 +281,35 @@ const Checkout: React.FC = () => {
     if (displayItems.length === 0) return;
     void prefetchCartProductImages(displayItems.map((i) => i.id));
   }, [displayItems]);
+
+  const lastPurchaseLines = useMemo(() => {
+    void lastPurchaseTick;
+    const invs = getInvoicesForCustomer(user?.email, user?.username);
+    const last = invs[0];
+    if (!last?.items?.length) return [];
+    return last.items.slice(0, 6).map((li) => {
+      const prod = getProductById(li.id);
+      const name = prod ? prod.name[language] : li.name;
+      return {
+        id: li.id,
+        name,
+        image: resolveStoredLineImage(li.id, li.image),
+        price: li.price,
+        qty: li.qty || 1,
+      };
+    });
+  }, [user?.email, user?.username, language, lastPurchaseTick]);
+
+  useEffect(() => {
+    if (lastPurchaseLines.length === 0) return;
+    void prefetchCartProductImages(lastPurchaseLines.map((l) => l.id));
+  }, [lastPurchaseLines]);
+
+  useEffect(() => {
+    const bump = () => setLastPurchaseTick((t) => t + 1);
+    window.addEventListener(CATALOG_IMAGES_HYDRATED_EVENT, bump);
+    return () => window.removeEventListener(CATALOG_IMAGES_HYDRATED_EVENT, bump);
+  }, []);
 
   const sectionTitleById = useMemo(() => {
     const map = new Map<string, { en: string; ar: string }>();
@@ -279,6 +416,7 @@ const Checkout: React.FC = () => {
           qty: i.quantity,
           price: i.price,
           variant: normalizeCartVariant(i.variantName),
+          image: persistableCartImage(i.id, i.image),
         })),
         total: orderPricing.total,
         subtotal: orderPricing.subtotal,
@@ -496,7 +634,7 @@ const Checkout: React.FC = () => {
           return {
             id: w.id,
             name: live.name,
-            image: live.image,
+            image: persistableCartImage(w.id, live.image),
             price: getPriceForMode(live, 'box'),
             category: live.category,
             inStock: live.inStock !== false,
@@ -505,13 +643,20 @@ const Checkout: React.FC = () => {
         return {
           id: w.id,
           name: w.name,
-          image: w.image,
+          image: persistableCartImage(w.id, w.image),
           price: w.price,
           category: w.category,
           inStock: true,
         };
       });
   }, [items, wishlistTick]);
+
+  useEffect(() => {
+    const ids = [
+      ...wishlistPicks.map((p) => p.id),
+    ];
+    if (ids.length) void prefetchCartProductImages(ids);
+  }, [wishlistPicks]);
 
   const sameSectionSuggestions = useMemo(() => {
     const inCartIds = new Set(items.map((i) => i.id));
@@ -534,7 +679,7 @@ const Checkout: React.FC = () => {
             return {
               id: p.id,
               name: live?.name ?? p.name,
-              image: live?.image ?? p.image,
+              image: persistableCartImage(p.id, live?.image ?? p.image),
               price: live ? getPriceForMode(live, 'box') : p.price,
               category: live?.category ?? p.category,
               inStock: (live?.inStock ?? p.inStock) !== false,
@@ -562,6 +707,11 @@ const Checkout: React.FC = () => {
 
     return { heading, products };
   }, [items, mergedSections, language]);
+
+  useEffect(() => {
+    const ids = sameSectionSuggestions.products.map((p) => p.id);
+    if (ids.length) void prefetchCartProductImages(ids);
+  }, [sameSectionSuggestions.products]);
 
   const addWishlistToCart = (p: (typeof wishlistPicks)[number]) => {
     addToCart({
@@ -913,7 +1063,7 @@ const Checkout: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="px-3 pb-3 pt-0 sm:px-4">
-                  <CheckoutSuggestRail
+                  <CheckoutSuggestProducts
                     products={wishlistPicks}
                     language={language}
                     currencyTitle={texts[language].currency}
@@ -926,12 +1076,15 @@ const Checkout: React.FC = () => {
             )}
 
             {sameSectionSuggestions.products.length > 0 ? (
-              <Card className="mt-6 shadow-md border-border/60">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base text-start">{sameSectionSuggestions.heading}</CardTitle>
+              <Card className="mt-6 overflow-hidden border-border/60 shadow-md">
+                <CardHeader className="border-b border-border/40 bg-muted/20 pb-3">
+                  <CardTitle className="text-start text-base font-semibold sm:text-lg">
+                    {sameSectionSuggestions.heading}
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="px-3 pb-3 pt-0 sm:px-4">
-                  <CheckoutSuggestRail
+                <CardContent className="px-3 py-4 sm:px-5 sm:py-5">
+                  <CheckoutSuggestProducts
+                    layout="grid"
                     products={sameSectionSuggestions.products}
                     language={language}
                     currencyTitle={texts[language].currency}
@@ -945,7 +1098,7 @@ const Checkout: React.FC = () => {
                         variantName: cartVariantKey('box'),
                       })
                     }
-                    addLabel={language === 'ar' ? 'أضف' : 'Add'}
+                    addLabel={language === 'ar' ? 'أضف للسلة' : 'Add to cart'}
                     soldOutLabel={texts[language].soldOut}
                   />
                 </CardContent>
@@ -953,84 +1106,46 @@ const Checkout: React.FC = () => {
             ) : null}
 
             <div className="mt-6">
-              {(() => {
-                try {
-                  const raw = localStorage.getItem('med-invoices');
-                  const invs = raw ? JSON.parse(raw) : [];
-                  if (!Array.isArray(invs) || invs.length === 0) {
-                    return (
-                      <Card className="border-border/60">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-base text-start">
-                            {language === 'ar' ? 'آخر ما اشتريته' : 'Last purchase'}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-start">
-                          <div className="text-sm text-muted-foreground">
-                            {language === 'ar' ? 'لا يوجد أشياء من قبل' : 'No previous items'}
+              <Card className="border-border/60">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base text-start">
+                    {language === 'ar' ? 'آخر ما اشتريته' : 'Last purchase'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-start">
+                  {lastPurchaseLines.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">
+                      {language === 'ar' ? 'لا يوجد أشياء من قبل' : 'No previous items'}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {lastPurchaseLines.map((li) => (
+                        <div key={`${li.id}-${li.name}`} className="flex items-center gap-3 rounded-lg border p-2">
+                          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-border/50 bg-muted/30">
+                            <CartProductImage
+                              productId={li.id}
+                              image={li.image}
+                              alt={li.name}
+                              allowPlaceholder={false}
+                              className="h-full w-full object-cover p-0"
+                            />
                           </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  }
-                  const last = invs[0];
-                  const itemsList = Array.isArray(last.items) ? last.items : [];
-                  if (itemsList.length === 0) {
-                    return (
-                      <Card className="border-border/60">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-base text-start">
-                            {language === 'ar' ? 'آخر ما اشتريته' : 'Last purchase'}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-start">
-                          <div className="text-sm text-muted-foreground">
-                            {language === 'ar' ? 'لا يوجد أشياء من قبل' : 'No previous items'}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  }
-                  return (
-                    <Card className="border-border/60">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base text-start">
-                          {language === 'ar' ? 'آخر ما اشتريته' : 'Last purchase'}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="grid grid-cols-1 gap-4 text-start">
-                        {itemsList.slice(0, 6).map((li: any) => {
-                          const prod = getProductById(li.id);
-                          const name = prod ? prod.name[language] : (li.name?.[language] || li.name?.en || '');
-                          const image = prod?.image || '';
-                          const price = li.price;
-                          const qty = li.qty || li.quantity || 1;
-                          return (
-                            <div key={`${li.id}-${name}`} className="flex items-center gap-3 p-2 rounded-lg border">
-                              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md border border-border/50 bg-muted/30">
-                                <CartProductImage
-                                  productId={li.id}
-                                  image={image}
-                                  alt={name}
-                                  className="h-full w-full p-0.5"
-                                />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="text-sm font-medium truncate">{name}</div>
-                                <div className="text-xs text-muted-foreground mt-0.5">
-                                  {qty} × {price} <CurrencyIcon className="inline-block h-3.5 w-3.5 align-[-1px]" title={texts[language].currency} />
-                                </div>
-                              </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm font-medium">{li.name}</div>
+                            <div className="mt-0.5 text-xs text-muted-foreground">
+                              {li.qty} × {li.price}{' '}
+                              <CurrencyIcon
+                                className="inline-block h-3.5 w-3.5 align-[-1px]"
+                                title={texts[language].currency}
+                              />
                             </div>
-                          );
-                        })}
-                      </CardContent>
-                    </Card>
-                  );
-                } catch {
-                  return null;
-                }
-              })()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </motion.div>
         </div>

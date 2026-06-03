@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, CalendarClock, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, CalendarClock, Heart, ShoppingCart } from 'lucide-react';
 import CurrencyIcon from '@/components/CurrencyIcon';
 import ProductSaleModePicker from '@/components/ProductSaleModePicker';
 import { ProductRatingStars } from '@/components/ProductRatingStars';
@@ -26,6 +26,7 @@ import {
   saleModeLabel,
   type SaleMode,
 } from '@/lib/productSaleModes';
+import { isInWishlist, toggleWishlistItem, WISHLIST_CHANGED } from '@/lib/wishlist';
 
 const RESERVATIONS_KEY = 'med-reservations';
 
@@ -54,7 +55,19 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [saleMode, setSaleMode] = useState<SaleMode>('box');
   const [reserveRefresh, setReserveRefresh] = useState(0);
+  const [wishlistRefresh, setWishlistRefresh] = useState(0);
   const footer = useMemo(() => getFooterContent(), []);
+
+  const inWishlist = useMemo(() => {
+    void wishlistRefresh;
+    return product ? isInWishlist(product.id) : false;
+  }, [product, wishlistRefresh]);
+
+  useEffect(() => {
+    const onWishlistChange = () => setWishlistRefresh((v) => v + 1);
+    window.addEventListener(WISHLIST_CHANGED, onWishlistChange);
+    return () => window.removeEventListener(WISHLIST_CHANGED, onWishlistChange);
+  }, []);
 
   const productSectionId = product ? getSectionIdForProduct(product.id) : null;
 
@@ -352,15 +365,58 @@ const ProductDetail = () => {
                   {language === 'en' ? 'Add to Cart' : 'أضف إلى السلة'}
                 </Button>
               )}
-              <Button
-                type="button"
-                variant="outline"
-                className="h-12 gap-2 rounded-full border-border/70 px-6"
-                onClick={() => navigate(-1)}
-              >
-                <ArrowLeft className={cn('h-4 w-4', language === 'ar' && 'rotate-180')} />
-                {language === 'en' ? 'Back' : 'رجوع'}
-              </Button>
+              <div className="flex shrink-0 items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-12 gap-2 rounded-full border-border/70 px-6"
+                  onClick={() => navigate(-1)}
+                >
+                  <ArrowLeft className={cn('h-4 w-4', language === 'ar' && 'rotate-180')} />
+                  {language === 'en' ? 'Back' : 'رجوع'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={cn(
+                    'h-12 gap-2 rounded-full border-border/70 px-5',
+                    inWishlist && 'border-rose-300/80 bg-rose-500/15 text-rose-200 hover:bg-rose-500/25 dark:border-rose-400/40 dark:text-rose-100',
+                  )}
+                  aria-pressed={inWishlist}
+                  aria-label={
+                    language === 'en'
+                      ? inWishlist
+                        ? 'Remove from wishlist'
+                        : 'Add to wishlist'
+                      : inWishlist
+                        ? 'إزالة من المفضلة'
+                        : 'أضف إلى المفضلة'
+                  }
+                  onClick={() => {
+                    if (!product) return;
+                    const added = toggleWishlistItem({
+                      id: product.id,
+                      name: product.name,
+                      category: product.category,
+                      image: product.image,
+                      price: getPriceForMode(product, 'box'),
+                    });
+                    setWishlistRefresh((v) => v + 1);
+                    toast.success(
+                      language === 'en'
+                        ? added
+                          ? 'Added to wishlist'
+                          : 'Removed from wishlist'
+                        : added
+                          ? 'أُضيف إلى المفضلة'
+                          : 'تمت الإزالة من المفضلة',
+                    );
+                  }}
+                >
+                  <Heart className={cn('h-5 w-5', inWishlist && 'fill-current')} aria-hidden />
+                  {language === 'en' ? 'Wishlist' : 'المفضلة'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
