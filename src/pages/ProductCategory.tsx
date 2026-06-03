@@ -28,6 +28,7 @@ import {
 } from '@/lib/catalogProductFilter';
 import SectionBonusStorefront from '@/components/SectionBonusStorefront';
 import { resolveStoreSectionId } from '@/lib/storeNav';
+import { cn } from '@/lib/utils';
 type Product = {
   id: number;
   name: { en: string; ar: string };
@@ -379,6 +380,17 @@ const ProductCategory = () => {
             className="mx-auto max-w-[1400px]"
           />
 
+          {isMobile && filteredProducts.length > 0 ? (
+            <p
+              className="mx-auto mb-3 max-w-[1400px] px-1 text-center text-xs text-muted-foreground"
+              dir={isArabic ? 'rtl' : 'ltr'}
+            >
+              {language === 'ar'
+                ? 'اسحب يميناً ويساراً لتصفح المنتجات'
+                : 'Swipe left or right to browse products'}
+            </p>
+          ) : null}
+
           {filteredProducts.length === 0 ? (
             <div className="mx-auto flex max-w-md flex-col items-center rounded-2xl border border-dashed border-border/70 bg-muted/15 px-6 py-14 text-center">
               <p className="text-lg font-medium text-foreground">
@@ -397,17 +409,38 @@ const ProductCategory = () => {
             </div>
           ) : (
           <motion.div
-            className="mx-auto grid w-full max-w-[1400px] auto-rows-fr grid-cols-[repeat(auto-fill,minmax(min(100%,272px),1fr))] items-stretch gap-4 sm:gap-5 lg:gap-6"
+            className={cn(
+              'mx-auto w-full max-w-[1400px]',
+              isMobile
+                ? 'catalog-products-rail flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-3 pt-0 [-webkit-overflow-scrolling:touch]'
+                : 'grid auto-rows-fr grid-cols-[repeat(auto-fill,minmax(min(100%,272px),1fr))] items-stretch gap-4 sm:gap-5 lg:gap-6',
+            )}
             variants={containerVariants}
             initial="hidden"
             animate="visible"
             key={`${categoryId}-${catalogSearch}-${stockFilter}-${saleFilter}`}
           >
             {filteredProducts.map((product) => (
-              <motion.div key={product.id} className="flex h-full min-h-0" variants={itemVariants}>
+              <motion.div
+                key={product.id}
+                className={cn(
+                  'flex min-h-0',
+                  isMobile
+                    ? 'w-[min(78vw,17.5rem)] shrink-0 snap-center'
+                    : 'h-full w-full',
+                )}
+                variants={itemVariants}
+              >
                 <Link to={`/product/${product.id}`} className="flex h-full min-h-0 w-full">
                   <div className="flex h-full min-h-0 w-full flex-col">
-                    <Card className="catalog-product-card featured-product-card group flex h-full min-h-[22rem] w-full flex-col overflow-hidden rounded-xl border shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-md sm:min-h-[24rem] sm:rounded-2xl sm:hover:-translate-y-1 sm:hover:shadow-lg dark:hover:border-accent/40">
+                    <Card
+                      className={cn(
+                        'catalog-product-card featured-product-card group flex h-full w-full flex-col overflow-hidden rounded-xl border shadow-sm transition-all duration-300 hover:border-primary/35 dark:hover:border-accent/40',
+                        isMobile
+                          ? 'min-h-[20rem] hover:shadow-md'
+                          : 'min-h-[22rem] hover:-translate-y-0.5 hover:shadow-md sm:min-h-[24rem] sm:rounded-2xl sm:hover:-translate-y-1 sm:hover:shadow-lg',
+                      )}
+                    >
                       <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-muted/30">
                         <img
                           src={product.image}

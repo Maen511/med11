@@ -370,6 +370,23 @@ body {
     box-shadow: 0 12px 32px -10px hsl(0 0% 0% / 0.45);
   }
 
+  /* Store catalog — horizontal swipe rail on phones */
+  .catalog-products-rail {
+    scroll-padding-inline: 1rem;
+    padding-inline: 0.25rem;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.35) transparent;
+  }
+
+  .catalog-products-rail::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .catalog-products-rail::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: hsl(var(--primary) / 0.35);
+  }
+
   /* Catalog listing cards — neutral surface (skincare grid) */
   .catalog-product-card {
     background: hsl(var(--card));
