@@ -186,19 +186,19 @@ const Index = () => {
       </motion.section>
 
       <motion.section
-        className="home-bioskin-line relative flex w-full max-w-full items-center overflow-x-clip bg-gradient-to-b from-background to-secondary/20 py-6 sm:py-16 md:py-20"
+        className="home-bioskin-line home-content-section relative w-full max-w-full overflow-x-clip bg-gradient-to-b from-background to-secondary/20"
         {...sectionReveal}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.45),transparent_38%),radial-gradient(circle_at_80%_70%,rgba(0,0,0,0.06),transparent_35%)]" />
-        <div className="relative z-10 w-full px-3 sm:px-5 lg:px-6">
-          <div className="home-bioskin-line__grid grid grid-cols-1 items-stretch gap-4 sm:gap-8 lg:grid-cols-2 lg:gap-12">
+        <div className="home-content-section__inner relative z-10 w-full px-3 sm:px-5 lg:px-6">
+          <div className="home-bioskin-line__grid grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-2 lg:gap-8">
             <motion.div
               initial={isMobileHome ? false : { opacity: 0, x: isMobileHome ? 0 : -24 }}
               whileInView={isMobileHome ? undefined : { opacity: 1, x: 0 }}
               animate={isMobileHome ? { opacity: 1, x: 0 } : undefined}
               transition={{ duration: 0.7 }}
               viewport={viewportInstant}
-              className="home-bioskin-line__media relative order-1 mx-auto aspect-square w-full shrink-0 overflow-hidden rounded-2xl border shadow-xl sm:max-w-md lg:order-2 lg:mx-0 lg:max-w-none lg:aspect-auto lg:min-h-[560px]"
+              className="home-bioskin-line__media relative order-1 mx-auto aspect-square w-full shrink-0 overflow-hidden rounded-2xl border shadow-xl sm:max-w-md lg:order-2 lg:mx-0 lg:max-w-none lg:aspect-[5/6] lg:h-auto lg:max-h-[28rem] lg:min-h-0"
             >
               <img
                 src="/section-2.png"
@@ -208,9 +208,9 @@ const Index = () => {
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/25 to-transparent" />
             </motion.div>
 
-            <div className="home-bioskin-line__copy order-2 flex flex-col justify-center text-center lg:order-1 lg:text-start">
+            <div className="home-bioskin-line__copy order-2 flex flex-col justify-start text-center lg:order-1 lg:text-start">
               <motion.h1
-                className={`home-bioskin-line__title mb-3 w-full max-w-full break-words text-2xl font-extralight text-gradient sm:mb-6 sm:text-5xl md:text-6xl lg:text-7xl ${language === 'ar' ? 'tracking-normal' : 'tracking-wider'}`}
+                className={`home-bioskin-line__title mb-2 w-full max-w-full break-words text-2xl font-extralight text-gradient sm:mb-4 sm:text-5xl md:text-6xl lg:text-7xl ${language === 'ar' ? 'tracking-normal' : 'tracking-wider'}`}
                 initial={isMobileHome ? false : { opacity: 0, scale: 0.8 }}
                 whileInView={isMobileHome ? undefined : { opacity: 1, scale: 1 }}
                 animate={isMobileHome ? { opacity: 1, scale: 1 } : undefined}
@@ -232,7 +232,7 @@ const Index = () => {
                   ? 'Discover a complete range of cosmetic skincare solutions designed to support daily care, visible glow, and confident healthy-looking skin.'
                   : 'اكتشف مجموعة متكاملة من حلول العناية التجميلية بالبشرة، مصممة لدعم العناية اليومية، إشراقة واضحة، ومظهر صحي يمنحك الثقة.'}
               </motion.p>
-              <div className="home-bioskin-line__points mt-4 max-w-2xl mx-auto sm:mt-6 lg:mx-0">
+              <div className="home-bioskin-line__points mt-3 max-w-2xl mx-auto sm:mt-4 lg:mx-0">
                 <p className="mb-2 text-xs font-semibold text-foreground sm:mb-3 sm:text-sm md:text-base">
                   {language === 'en' ? 'Why this line?' : 'لماذا هذه المجموعة؟'}
                 </p>
@@ -262,7 +262,7 @@ const Index = () => {
       </motion.section>
 
       <motion.section
-        className="home-why-bioskin relative flex w-full max-w-full items-center overflow-x-clip bg-background py-6 sm:py-10 md:py-14"
+        className="home-why-bioskin home-content-section relative w-full max-w-full overflow-x-clip bg-background"
         {...sectionReveal}
       >
         <motion.img
@@ -277,10 +277,10 @@ const Index = () => {
         />
         <div className="pointer-events-none absolute inset-0 bg-background/65" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(0,0,0,0.06),transparent_30%),radial-gradient(circle_at_10%_90%,rgba(255,255,255,0.5),transparent_35%)]" />
-        <div className="relative z-10 w-full px-3 sm:px-5 lg:px-6">
-          <div className="home-why-bioskin__grid grid grid-cols-1 items-stretch gap-4 sm:gap-6 md:gap-10 lg:grid-cols-2">
+        <div className="home-content-section__inner relative z-10 w-full px-3 sm:px-5 lg:px-6">
+          <div className="home-why-bioskin__grid grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-2 lg:gap-8">
             <motion.div
-              className="home-why-bioskin__media relative order-1 mx-auto aspect-square w-full shrink-0 overflow-hidden rounded-2xl border border-white/20 shadow-2xl sm:max-w-lg lg:order-2 lg:mx-0 lg:max-w-none lg:aspect-auto lg:min-h-[680px]"
+              className="home-why-bioskin__media relative order-1 mx-auto aspect-square w-full shrink-0 overflow-hidden rounded-2xl border border-white/20 shadow-2xl sm:max-w-lg lg:order-2 lg:mx-0 lg:max-w-none lg:aspect-[5/6] lg:h-auto lg:max-h-[28rem] lg:min-h-0"
               initial={isMobileHome ? false : { opacity: 0, y: 44 }}
               whileInView={isMobileHome ? undefined : { opacity: 1, y: 0 }}
               animate={isMobileHome ? { opacity: 1, y: 0 } : undefined}
@@ -308,7 +308,7 @@ const Index = () => {
             </motion.div>
 
             <motion.div
-              className="home-why-bioskin__copy order-2 flex flex-col justify-center px-0 text-center sm:px-2 md:px-4 lg:order-1 lg:text-start"
+              className="home-why-bioskin__copy order-2 flex flex-col justify-start px-0 text-center sm:px-2 md:px-4 lg:order-1 lg:text-start"
               initial={isMobileHome ? false : { opacity: 0, y: 40 }}
               whileInView={isMobileHome ? undefined : { opacity: 1, y: 0 }}
               animate={isMobileHome ? { opacity: 1, y: 0 } : undefined}
@@ -321,7 +321,7 @@ const Index = () => {
               <h2 className="home-why-bioskin__title mb-3 w-full max-w-full break-words px-0.5 text-2xl font-semibold text-gradient sm:mb-4 sm:text-4xl md:text-5xl">
                 {language === 'en' ? 'Why BIOSKIN?' : 'لماذا BIOSKIN؟'}
               </h2>
-              <p className="home-why-bioskin__lead mx-auto mb-4 max-w-2xl text-sm leading-relaxed text-foreground/90 sm:mb-7 sm:text-base md:text-lg lg:mx-0">
+              <p className="home-why-bioskin__lead mx-auto mb-3 max-w-2xl text-sm leading-relaxed text-foreground/90 sm:mb-5 sm:text-base md:text-lg lg:mx-0">
                 {language === 'en'
                   ? 'BIOSKIN combines professional aesthetic quality with a practical shopping experience, so every step from choosing products to checkout feels clear, reliable, and aligned with your daily care goals.'
                   : 'BIOSKIN تجمع بين الجودة التجميلية الاحترافية وتجربة شراء عملية، لتكون كل خطوة من اختيار المنتجات وحتى إتمام الطلب واضحة، موثوقة، ومناسبة لأهداف العناية اليومية.'}

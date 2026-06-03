@@ -141,8 +141,56 @@
   }
 }
 
+/* Home — content sections: tight vertical rhythm, no empty stretch gaps */
+.home-content-section {
+  padding-block: 1.25rem;
+}
+
+.home-content-section__inner {
+  padding-block: 0.25rem;
+}
+
+.home-content-section + .home-content-section {
+  padding-top: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .home-content-section {
+    padding-block: 2rem;
+  }
+
+  .home-content-section + .home-content-section {
+    padding-top: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-content-section {
+    padding-block: 2.5rem;
+  }
+
+  .home-bioskin-line__grid,
+  .home-why-bioskin__grid {
+    align-items: start;
+  }
+
+  .home-bioskin-line__copy,
+  .home-why-bioskin__copy {
+    align-self: start;
+    padding-top: 0.15rem;
+  }
+}
+
 /* Home — BIO SKIN product line (compact square block on phones) */
 @media (max-width: 639px) {
+  .home-content-section {
+    padding-block: 1rem;
+  }
+
+  .home-content-section + .home-content-section {
+    padding-top: 0.35rem;
+  }
+
   .home-bioskin-line__media {
     width: min(96vw, 23rem);
     max-width: 23rem;
