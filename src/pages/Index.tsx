@@ -185,16 +185,32 @@ const Index = () => {
         </div>
       </motion.section>
 
-      <motion.section 
-        className="relative w-full max-w-full py-10 sm:py-16 md:py-20 bg-gradient-to-b from-background to-secondary/20 overflow-x-clip flex items-center"
+      <motion.section
+        className="home-bioskin-line relative flex w-full max-w-full items-center overflow-x-clip bg-gradient-to-b from-background to-secondary/20 py-6 sm:py-16 md:py-20"
         {...sectionReveal}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.45),transparent_38%),radial-gradient(circle_at_80%_70%,rgba(0,0,0,0.06),transparent_35%)]" />
-        <div className="w-full px-3 sm:px-5 lg:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-stretch">
-            <div className="text-center lg:text-start flex flex-col justify-center">
-              <motion.h1 
-                className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extralight text-gradient mb-6 w-full max-w-full break-words ${language === 'ar' ? 'tracking-normal' : 'tracking-wider'}`}
+        <div className="relative z-10 w-full px-3 sm:px-5 lg:px-6">
+          <div className="home-bioskin-line__grid grid grid-cols-1 items-stretch gap-4 sm:gap-8 lg:grid-cols-2 lg:gap-12">
+            <motion.div
+              initial={isMobileHome ? false : { opacity: 0, x: isMobileHome ? 0 : -24 }}
+              whileInView={isMobileHome ? undefined : { opacity: 1, x: 0 }}
+              animate={isMobileHome ? { opacity: 1, x: 0 } : undefined}
+              transition={{ duration: 0.7 }}
+              viewport={viewportInstant}
+              className="home-bioskin-line__media relative order-1 mx-auto w-full max-w-[min(92vw,17.5rem)] aspect-square shrink-0 overflow-hidden rounded-2xl border shadow-xl sm:max-w-md lg:order-2 lg:mx-0 lg:max-w-none lg:aspect-auto lg:min-h-[560px]"
+            >
+              <img
+                src="/section-2.png"
+                alt="Medical cosmetic skincare"
+                className="absolute inset-0 h-full w-full object-cover object-center"
+              />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/25 to-transparent" />
+            </motion.div>
+
+            <div className="home-bioskin-line__copy order-2 flex flex-col justify-center text-center lg:order-1 lg:text-start">
+              <motion.h1
+                className={`home-bioskin-line__title mb-3 w-full max-w-full break-words text-2xl font-extralight text-gradient sm:mb-6 sm:text-5xl md:text-6xl lg:text-7xl ${language === 'ar' ? 'tracking-normal' : 'tracking-wider'}`}
                 initial={isMobileHome ? false : { opacity: 0, scale: 0.8 }}
                 whileInView={isMobileHome ? undefined : { opacity: 1, scale: 1 }}
                 animate={isMobileHome ? { opacity: 1, scale: 1 } : undefined}
@@ -204,8 +220,8 @@ const Index = () => {
               >
                 {language === 'en' ? 'BIO SKIN Product Line' : 'مجموعة منتجات BIO SKIN'}
               </motion.h1>
-              <motion.p 
-                className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 font-light leading-relaxed"
+              <motion.p
+                className="home-bioskin-line__lead mx-auto max-w-2xl text-sm font-light leading-relaxed text-muted-foreground sm:text-lg md:text-xl lg:mx-0"
                 initial={isMobileHome ? false : { opacity: 0, y: 30 }}
                 whileInView={isMobileHome ? undefined : { opacity: 1, y: 0 }}
                 animate={isMobileHome ? { opacity: 1, y: 0 } : undefined}
@@ -216,11 +232,11 @@ const Index = () => {
                   ? 'Discover a complete range of cosmetic skincare solutions designed to support daily care, visible glow, and confident healthy-looking skin.'
                   : 'اكتشف مجموعة متكاملة من حلول العناية التجميلية بالبشرة، مصممة لدعم العناية اليومية، إشراقة واضحة، ومظهر صحي يمنحك الثقة.'}
               </motion.p>
-              <div className="mt-6 max-w-2xl mx-auto lg:mx-0">
-                <p className="text-sm md:text-base font-semibold text-foreground mb-3">
+              <div className="home-bioskin-line__points mt-4 max-w-2xl mx-auto sm:mt-6 lg:mx-0">
+                <p className="mb-2 text-xs font-semibold text-foreground sm:mb-3 sm:text-sm md:text-base">
                   {language === 'en' ? 'Why this line?' : 'لماذا هذه المجموعة؟'}
                 </p>
-                <ul className="space-y-2.5 text-sm md:text-base text-muted-foreground">
+                <ul className="home-bioskin-line__points-grid grid grid-cols-2 gap-2 text-start text-[0.7rem] leading-snug text-muted-foreground sm:gap-2.5 sm:text-sm md:text-base lg:grid-cols-1 lg:space-y-2.5">
                   {(language === 'en'
                     ? [
                         'Wide product selection covering brightening, hydration, renewal, and daily protection needs.',
@@ -233,29 +249,14 @@ const Index = () => {
                         'رحلة عناية متكاملة تبدأ من الأساسيات اليومية وتصل إلى الخيارات العلاجية الموجهة.',
                       ]
                   ).map((point) => (
-                    <li key={point} className="flex items-start gap-2.5 leading-relaxed">
-                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                    <li key={point} className="flex items-start gap-1.5 rounded-lg bg-background/60 p-2 leading-snug sm:gap-2.5 sm:bg-transparent sm:p-0 lg:leading-relaxed">
+                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary sm:h-4 sm:w-4" />
                       <span>{point}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
-            <motion.div
-              initial={isMobileHome ? false : { opacity: 0, x: 30 }}
-              whileInView={isMobileHome ? undefined : { opacity: 1, x: 0 }}
-              animate={isMobileHome ? { opacity: 1, x: 0 } : undefined}
-              transition={{ duration: 0.7 }}
-              viewport={viewportInstant}
-              className="relative h-full"
-            >
-              <img
-                src="/section-2.png"
-                alt="Medical cosmetic skincare"
-                className="w-full h-[320px] sm:h-[420px] md:h-[520px] lg:h-full lg:min-h-[560px] object-cover object-center rounded-2xl border shadow-xl"
-              />
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/25 to-transparent" />
-            </motion.div>
           </div>
         </div>
       </motion.section>
