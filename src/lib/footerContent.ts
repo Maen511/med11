@@ -121,6 +121,13 @@ export function setFooterContent(content: FooterContent) {
   window.dispatchEvent(new Event(FOOTER_CONTENT_CHANGED));
 }
 
+/** رابط فتح محادثة واتساب من رقم بصيغة tel (+962...) */
+export function phoneTelToWhatsAppUrl(tel: string): string {
+  const digits = tel.replace(/\D/g, '');
+  if (!digits) return 'https://wa.me/';
+  return `https://wa.me/${digits}`;
+}
+
 export function phoneDisplayToTel(display: string): string {
   const trimmed = display.trim();
   if (!trimmed) return STORE_PHONE_TEL;

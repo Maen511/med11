@@ -199,6 +199,63 @@ export function verifyCustomerAccessCode(username: string, entered: string): boo
   return codesMatch(entered, row.accessCode);
 }
 
+export type ChangeCustomerPasswordResult =
+  | { ok: true }
+  | { ok: false; code: 'wrong_current' | 'too_short' | 'mismatch' | 'same' | 'not_found' };
+
+export type AdminSetCustomerPasswordResult =
+  | { ok: true }
+  | { ok: false; code: 'too_short' | 'mismatch' | 'not_found' };
+
+export function changeCustomerPassword(
+  username: string,
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string,
+): ChangeCustomerPasswordResult {
+  const key = accountKeyForUsername(username);
+  if (!key) return { ok: false, code: 'not_found' };
+
+  const map = readCustomerAccountsMap();
+  const row = map[key];
+  if (!row?.user || row.user.role !== 'user') return { ok: false, code: 'not_found' };
+
+  const current = currentPassword.trim();
+  const next = newPassword.trim();
+  const confirm = confirmPassword.trim();
+
+  if (current !== row.password) return { ok: false, code: 'wrong_current' };
+  if (next.length < 4) return { ok: false, code: 'too_short' };
+  if (next !== confirm) return { ok: false, code: 'mismatch' };
+  if (next === current) return { ok: false, code: 'same' };
+
+  writeCustomerAccountRow(key, { ...row, password: next });
+  return { ok: true };
+}
+
+/** الأدمن يعيّن كلمة مرور جديدة للعميل (بدون كلمة المرور الحالية) */
+export function adminSetCustomerPassword(
+  username: string,
+  newPassword: string,
+  confirmPassword: string,
+): AdminSetCustomerPasswordResult {
+  const key = accountKeyForUsername(username);
+  if (!key) return { ok: false, code: 'not_found' };
+
+  const map = readCustomerAccountsMap();
+  const row = map[key];
+  if (!row?.user || row.user.role !== 'user') return { ok: false, code: 'not_found' };
+
+  const next = newPassword.trim();
+  const confirm = confirmPassword.trim();
+
+  if (next.length < 4) return { ok: false, code: 'too_short' };
+  if (next !== confirm) return { ok: false, code: 'mismatch' };
+
+  writeCustomerAccountRow(key, { ...row, password: next });
+  return { ok: true };
+}
+
 /** حذف حساب العميل نهائياً من المتجر */
 export function deleteCustomerAccount(username: string): boolean {
   const key = accountKeyForUsername(username);

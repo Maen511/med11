@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Bell, Mail, Phone, Search, Trash2, UserCheck, UserX, Users } from 'lucide-react';
+import { Bell, Lock, Mail, Phone, Search, Trash2, UserCheck, UserX, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import {
+  adminSetCustomerPassword,
   deleteCustomerAccount,
   grantFullCustomerAccess,
   hasFullCatalogAccess,
@@ -53,6 +55,9 @@ const AdminCustomersPanel = ({ language }: Props) => {
   const isRtl = language === 'ar';
   const [accounts, setAccounts] = useState<CustomerAccountSnapshot[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<CustomerAccountSnapshot | null>(null);
+  const [passwordTarget, setPasswordTarget] = useState<CustomerAccountSnapshot | null>(null);
+  const [adminNewPassword, setAdminNewPassword] = useState('');
+  const [adminConfirmPassword, setAdminConfirmPassword] = useState('');
   const [search, setSearch] = useState('');
   const [accessFilter, setAccessFilter] = useState<AccessFilter>('all');
   const [sortKey, setSortKey] = useState<SortKey>('name-asc');
@@ -97,6 +102,16 @@ const AdminCustomersPanel = ({ language }: Props) => {
             noAccess: 'بانتظار التفعيل',
             grantFull: 'منح وصول كامل',
             deleteAccount: 'حذف',
+            changePassword: 'كلمة المرور',
+            passwordDialogTitle: 'تغيير كلمة مرور العميل',
+            passwordDialogDesc: 'سيستخدم العميل كلمة المرور الجديدة عند تسجيل الدخول التالي.',
+            newPassword: 'كلمة المرور الجديدة',
+            confirmPassword: 'تأكيد كلمة المرور',
+            savePassword: 'حفظ',
+            passwordSaved: 'تم تحديث كلمة مرور العميل',
+            passwordTooShort: '4 أحرف على الأقل',
+            passwordMismatch: 'التأكيد لا يطابق كلمة المرور',
+            cancel: 'إلغاء',
             total: 'إجمالي العملاء',
             active: 'مفعّل',
             pending: 'بانتظار',
@@ -124,6 +139,16 @@ const AdminCustomersPanel = ({ language }: Props) => {
             noAccess: 'Pending',
             grantFull: 'Grant full access',
             deleteAccount: 'Delete',
+            changePassword: 'Password',
+            passwordDialogTitle: 'Change customer password',
+            passwordDialogDesc: 'The customer will use the new password on their next sign-in.',
+            newPassword: 'New password',
+            confirmPassword: 'Confirm password',
+            savePassword: 'Save',
+            passwordSaved: 'Customer password updated',
+            passwordTooShort: 'At least 4 characters',
+            passwordMismatch: 'Confirmation does not match',
+            cancel: 'Cancel',
             total: 'Total customers',
             active: 'Active',
             pending: 'Pending',
@@ -188,6 +213,35 @@ const AdminCustomersPanel = ({ language }: Props) => {
         : 'Full access granted — active on next login',
     );
     reload();
+  };
+
+  const openPasswordDialog = (row: CustomerAccountSnapshot) => {
+    setPasswordTarget(row);
+    setAdminNewPassword('');
+    setAdminConfirmPassword('');
+  };
+
+  const closePasswordDialog = () => {
+    setPasswordTarget(null);
+    setAdminNewPassword('');
+    setAdminConfirmPassword('');
+  };
+
+  const saveCustomerPassword = () => {
+    if (!passwordTarget) return;
+    const result = adminSetCustomerPassword(
+      passwordTarget.user.username,
+      adminNewPassword,
+      adminConfirmPassword,
+    );
+    if (result.ok === false) {
+      if (result.code === 'too_short') toast.error(t.passwordTooShort);
+      else if (result.code === 'mismatch') toast.error(t.passwordMismatch);
+      else toast.error(isRtl ? 'تعذّر التحديث' : 'Could not update password');
+      return;
+    }
+    toast.success(t.passwordSaved);
+    closePasswordDialog();
   };
 
   const confirmDelete = () => {
@@ -416,6 +470,16 @@ const AdminCustomersPanel = ({ language }: Props) => {
                               type="button"
                               size="sm"
                               variant="outline"
+                              className="gap-1"
+                              onClick={() => openPasswordDialog(row)}
+                            >
+                              <Lock className="h-3.5 w-3.5" />
+                              <span className="hidden sm:inline">{t.changePassword}</span>
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
                               className="gap-1 text-destructive hover:bg-destructive/10 hover:text-destructive"
                               onClick={() => setDeleteTarget(row)}
                             >
@@ -433,6 +497,55 @@ const AdminCustomersPanel = ({ language }: Props) => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={Boolean(passwordTarget)} onOpenChange={(open) => !open && closePasswordDialog()}>
+        <DialogContent className="max-w-md" dir={isRtl ? 'rtl' : 'ltr'}>
+          <DialogHeader>
+            <DialogTitle>{t.passwordDialogTitle}</DialogTitle>
+            <DialogDescription>
+              {t.passwordDialogDesc}{' '}
+              {passwordTarget ? (
+                <>
+                  <span className="font-medium text-foreground">{passwordTarget.user.name}</span>{' '}
+                  (<span dir="ltr">@{passwordTarget.user.username}</span>)
+                </>
+              ) : null}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-1">
+            <div className="space-y-1.5">
+              <Label htmlFor="admin-customer-new-pw">{t.newPassword}</Label>
+              <Input
+                id="admin-customer-new-pw"
+                type="password"
+                autoComplete="new-password"
+                value={adminNewPassword}
+                onChange={(e) => setAdminNewPassword(e.target.value)}
+                dir="ltr"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="admin-customer-confirm-pw">{t.confirmPassword}</Label>
+              <Input
+                id="admin-customer-confirm-pw"
+                type="password"
+                autoComplete="new-password"
+                value={adminConfirmPassword}
+                onChange={(e) => setAdminConfirmPassword(e.target.value)}
+                dir="ltr"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" onClick={closePasswordDialog}>
+              {t.cancel}
+            </Button>
+            <Button type="button" className="btn-primary" onClick={saveCustomerPassword}>
+              {t.savePassword}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent className="max-w-md" dir={isRtl ? 'rtl' : 'ltr'}>

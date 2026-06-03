@@ -24,6 +24,7 @@ const ProductCategory = lazy(() => import("./pages/ProductCategory"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const Profile = lazy(() => import("./pages/Profile"));
+const AccountSettings = lazy(() => import("./pages/AccountSettings"));
 const Login = lazy(() => import("./pages/Login"));
 const Orders = lazy(() => import("./pages/Orders"));
 const Addresses = lazy(() => import("./pages/Addresses"));
@@ -37,7 +38,7 @@ const isProductCategoryListingPath = (path: string | null): path is string => {
   return rest.length > 0 && !rest.includes("/");
 };
 
-const ACCOUNT_HUB_PATHS = new Set(["/profile", "/orders", "/wishlist", "/addresses"]);
+const ACCOUNT_HUB_PATHS = new Set(["/profile", "/settings", "/orders", "/wishlist", "/addresses"]);
 const isAccountHubPath = (path: string | null): boolean =>
   Boolean(path && ACCOUNT_HUB_PATHS.has(path));
 
@@ -172,6 +173,14 @@ const RoutesWithSplash = () => {
             }
           >
             <Route path="/profile" element={<Profile />} />
+            <Route
+              path="/settings"
+              element={
+                <RequireCustomerAccount>
+                  <AccountSettings />
+                </RequireCustomerAccount>
+              }
+            />
             <Route
               path="/orders"
               element={

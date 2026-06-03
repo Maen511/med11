@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -28,6 +28,7 @@ import AdminNavUnreadBadge from '@/components/admin/AdminNavUnreadBadge';
 import { useAdminOrderNotifications } from '@/hooks/useAdminOrderNotifications';
 import { useAdminPromoCodeNotifications } from '@/hooks/useAdminPromoCodeNotifications';
 import { useAdminCustomerSignupNotifications } from '@/hooks/useAdminCustomerSignupNotifications';
+import { storeProductsPath } from '@/lib/storeNav';
 
 export type AdminNavId =
   | 'overview'
@@ -50,10 +51,10 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { id: 'overview', icon: LayoutDashboard, labelEn: 'Overview', labelAr: 'نظرة عامة' },
-  { id: 'products', icon: Package, labelEn: 'Products', labelAr: 'المنتجات' },
   { id: 'customers', icon: Users, labelEn: 'Customers', labelAr: 'العملاء' },
-  { id: 'invoices', icon: FileText, labelEn: 'Invoices', labelAr: 'الفواتير' },
+  { id: 'products', icon: Package, labelEn: 'Products', labelAr: 'المنتجات' },
   { id: 'orders', icon: ShoppingBag, labelEn: 'Orders', labelAr: 'الطلبات' },
+  { id: 'invoices', icon: FileText, labelEn: 'Invoices', labelAr: 'الفواتير' },
   { id: 'bonus', icon: Gift, labelEn: 'Bonus', labelAr: 'بونص' },
   { id: 'promotions', icon: Megaphone, labelEn: 'Promotions', labelAr: 'الإعلانات' },
   { id: 'influencers', icon: Tag, labelEn: 'Influencer codes', labelAr: 'أكواد الإنفلونسر' },
@@ -89,6 +90,7 @@ const AdminLayout = ({
   const { unreadCount: ordersUnread } = useAdminOrderNotifications();
   const { unreadCount: promoUnread } = useAdminPromoCodeNotifications();
   const { unreadCount: customersUnread } = useAdminCustomerSignupNotifications();
+  const storeHref = useMemo(() => storeProductsPath([], { isAdmin: true }), []);
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -220,7 +222,7 @@ const AdminLayout = ({
             className="w-full justify-start gap-2 text-zinc-300 hover:bg-white/10 hover:text-white"
             asChild
           >
-            <Link to="/">
+            <Link to={storeHref}>
               <Store className="h-4 w-4" />
               {isRtl ? 'المتجر' : 'Storefront'}
             </Link>

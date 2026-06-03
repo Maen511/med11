@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { notifyCatalogAccessPending } from '@/lib/catalogAccessToast';
-import { UserRound, Package, Heart, MapPin, ChevronRight, LayoutDashboard } from 'lucide-react';
+import { UserRound, Package, Heart, MapPin, ChevronRight, LayoutDashboard, Settings } from 'lucide-react';
 
 const AccountHubLayout = () => {
   const { language, setLanguage } = useLanguage();
@@ -28,6 +28,7 @@ const AccountHubLayout = () => {
       ]
     : [
         { to: '/profile', label: isRtl ? 'الملف الشخصي' : 'Profile', icon: UserRound, end: true },
+        { to: '/settings', label: isRtl ? 'الإعدادات' : 'Settings', icon: Settings },
         { to: '/orders', label: isRtl ? 'طلباتي' : 'My orders', icon: Package, needsCatalog: true },
         { to: '/wishlist', label: isRtl ? 'المفضلة' : 'Wishlist', icon: Heart, needsCatalog: true },
         { to: '/addresses', label: isRtl ? 'العناوين' : 'Addresses', icon: MapPin },

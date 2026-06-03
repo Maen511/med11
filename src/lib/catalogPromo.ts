@@ -53,7 +53,7 @@ export const DEFAULT_CATALOG_PROMO: CatalogPromoConfig = {
   cta: { en: 'Browse store', ar: 'تصفّح المتجر' },
 };
 
-function mergeConfig(partial: Partial<CatalogPromoConfig> | null): CatalogPromoConfig {
+export function mergeConfig(partial: Partial<CatalogPromoConfig> | null): CatalogPromoConfig {
   const d = DEFAULT_CATALOG_PROMO;
   if (!partial || typeof partial !== 'object') return { ...d };
   return {

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { focusNextOnTabOrEnter } from '@/lib/authFieldFocus';
 import {
   Dialog,
@@ -210,14 +210,6 @@ const CustomerAuthDialog = ({ open, onOpenChange, language }: Props) => {
             >
               {language === 'ar' ? 'ليس لديك حساب؟' : "Don't have an account?"}
             </button>
-
-            <Link
-              to="/contact"
-              className="mt-4 text-center text-xs text-zinc-500 transition-colors hover:text-zinc-300"
-              onClick={() => onOpenChange(false)}
-            >
-              {language === 'ar' ? 'نسيت كلمة المرور؟' : 'Forgot your password?'}
-            </Link>
           </div>
         ) : (
           <div className="flex max-h-[min(92dvh,820px)] flex-col overflow-y-auto overscroll-contain px-7 pb-8 pt-10 sm:px-9 sm:pb-10 sm:pt-11">

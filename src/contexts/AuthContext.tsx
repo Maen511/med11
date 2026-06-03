@@ -7,10 +7,12 @@ import {
 } from '@/lib/adminAuth';
 import { findAdminByCredentials } from '@/lib/adminAccounts';
 import {
+  changeCustomerPassword,
   getCustomerAccount,
   readCustomerAccountsMap,
   writeCustomerAccountRow,
   verifyCustomerAccessCode,
+  type ChangeCustomerPasswordResult,
   type CustomerAccountSnapshot,
 } from '@/lib/customerAccounts';
 import { notifyAdminNewCustomerSignup } from '@/lib/adminCustomerSignupNotifications';
@@ -168,6 +170,11 @@ interface AuthContextType {
   loginCustomer: (username: string, password: string) => boolean;
   verifyCatalogCode: (code: string) => boolean;
   adminLogin: (identifier: string, password: string) => boolean;
+  changeCustomerPassword: (
+    currentPassword: string,
+    newPassword: string,
+    confirmPassword: string,
+  ) => ChangeCustomerPasswordResult;
   logout: () => void;
 }
 
@@ -409,6 +416,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {}
   }, []);
 
+  const changeCustomerPasswordForUser = useCallback(
+    (currentPassword: string, newPassword: string, confirmPassword: string): ChangeCustomerPasswordResult => {
+      const username = session?.user?.username;
+      if (!username || session?.user?.role !== 'user') {
+        return { ok: false, code: 'not_found' };
+      }
+      return changeCustomerPassword(username, currentPassword, newPassword, confirmPassword);
+    },
+    [session?.user?.username, session?.user?.role],
+  );
+
   const contextValue = useMemo(
     () => ({
       user,
@@ -422,6 +440,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       loginCustomer,
       verifyCatalogCode,
       adminLogin,
+      changeCustomerPassword: changeCustomerPasswordForUser,
       logout,
     }),
     [
@@ -436,6 +455,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       loginCustomer,
       verifyCatalogCode,
       adminLogin,
+      changeCustomerPasswordForUser,
       logout,
     ],
   );

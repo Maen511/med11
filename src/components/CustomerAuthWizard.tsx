@@ -23,7 +23,7 @@ type Props = {
   embedded?: boolean;
   /** لوحة داكنة (نافذة الحساب) */
   darkPanel?: boolean;
-  /** نموذج مبسّط للبوابة: مستخدم، هاتف، بريد، كلمة مرور */
+  /** نموذج البوابة (نافذة الحساب من الهيدر) */
   portalLayout?: boolean;
   /** إخفاء زر الإرسال داخل النموذج (يُعرض خارج منطقة التمرير في النافذة) */
   hideSubmit?: boolean;
@@ -163,20 +163,17 @@ const CustomerAuthWizard = ({
       toast.error(language === 'ar' ? 'كلمتا المرور غير متطابقتين.' : 'Passwords do not match.');
       return;
     }
-    let displayName = u;
-    if (!portalLayout) {
-      const first = firstName.trim();
-      const last = lastName.trim();
-      if (!first) {
-        toast.error(language === 'ar' ? 'أدخل الاسم الأول.' : 'Please enter your first name.');
-        return;
-      }
-      if (!last) {
-        toast.error(language === 'ar' ? 'أدخل اسم العائلة.' : 'Please enter your last name.');
-        return;
-      }
-      displayName = `${first} ${last}`;
+    const first = firstName.trim();
+    const last = lastName.trim();
+    if (!first) {
+      toast.error(language === 'ar' ? 'أدخل الاسم الأول.' : 'Please enter your first name.');
+      return;
     }
+    if (!last) {
+      toast.error(language === 'ar' ? 'أدخل اسم العائلة.' : 'Please enter your last name.');
+      return;
+    }
+    const displayName = `${first} ${last}`;
     if (!emailLooksValid(email)) {
       toast.error(language === 'ar' ? 'أدخل بريداً إلكترونياً صحيحاً.' : 'Please enter a valid email address.');
       return;
@@ -244,6 +241,33 @@ const CustomerAuthWizard = ({
               required
             />
           </PortalField>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <PortalField id="wiz-first-name" label={language === 'ar' ? 'الاسم الأول' : 'First name'}>
+              <Input
+                id="wiz-first-name"
+                autoComplete="given-name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                dir={isRtl ? 'rtl' : 'ltr'}
+                placeholder={language === 'ar' ? 'مثال: محمد' : 'e.g. John'}
+                className={portalInputClass}
+                required
+              />
+            </PortalField>
+            <PortalField id="wiz-last-name" label={language === 'ar' ? 'اسم العائلة' : 'Last name'}>
+              <Input
+                id="wiz-last-name"
+                autoComplete="family-name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                dir={isRtl ? 'rtl' : 'ltr'}
+                placeholder={language === 'ar' ? 'مثال: أحمد' : 'e.g. Smith'}
+                className={portalInputClass}
+                required
+              />
+            </PortalField>
+          </div>
 
           <PortalField id="wiz-phone" label={language === 'ar' ? 'رقم الهاتف' : 'Phone Number'}>
             <div className="flex" dir="ltr">

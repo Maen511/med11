@@ -1,68 +1,59 @@
+import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Clock, Mail, MapPin, Phone, Send, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, Mail } from 'lucide-react';
 import Header from '@/components/Header';
 import BrandedPageAmbient from '@/components/BrandedPageAmbient';
 import Footer from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
-import { STORE_PHONE_DISPLAY, STORE_PHONE_TEL } from '@/lib/storeLocale';
 import { LOGO_URL } from '@/lib/branding';
+import {
+  FOOTER_CONTENT_CHANGED,
+  getFooterContent,
+  phoneTelToWhatsAppUrl,
+  type FooterContent,
+} from '@/lib/footerContent';
 
-function ContactInfoRow({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
+function WhatsAppIcon({ className }: { className?: string }) {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-border/50 bg-muted/10 p-3.5 text-start">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
-      </span>
-      <div className="min-w-0 flex-1 space-y-0.5 pt-0.5 text-sm leading-relaxed text-foreground/90">{children}</div>
-    </div>
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.883 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+    </svg>
   );
 }
 
 const Contact = () => {
   const { language, setLanguage } = useLanguage();
   const navigate = useNavigate();
+  const [footer, setFooter] = useState<FooterContent>(() => getFooterContent());
+
+  const reloadFooter = useCallback(() => setFooter(getFooterContent()), []);
+
+  useEffect(() => {
+    reloadFooter();
+    const onChange = () => reloadFooter();
+    window.addEventListener(FOOTER_CONTENT_CHANGED, onChange);
+    return () => window.removeEventListener(FOOTER_CONTENT_CHANGED, onChange);
+  }, [reloadFooter]);
 
   const labels = {
     en: {
       title: 'Contact Us',
-      subtitle: 'Our team is ready to support your skincare needs',
-      name: 'Name',
-      email: 'Your Email',
-      message: 'Message',
-      send: 'Send Message',
-      formTitle: 'Send us a message',
-      follow: 'Support',
-      followIntro: 'For product guidance and order support, contact us via email or phone.',
-      address: 'Address',
-      hours: 'Hours',
-      hoursTime: '10:00 AM - 10:00 PM',
-      addressLine1: 'Healthcare District - Office 14',
-      addressLine2: 'Amman - Jordan',
+      subtitle: 'Reach our team for product guidance and order support',
+      emailLabel: 'Email',
+      whatsappLabel: 'WhatsApp',
     },
     ar: {
       title: 'اتصل بنا',
-      subtitle: 'فريقنا جاهز لدعم احتياجات العناية ببشرتك',
-      name: 'الاسم',
-      email: 'بريدك الإلكتروني',
-      message: 'الرسالة',
-      send: 'إرسال الرسالة',
-      formTitle: 'أرسل لنا رسالة',
-      follow: 'الدعم',
-      followIntro: 'للاستفسار عن المنتجات ودعم الطلبات، تواصل معنا عبر البريد أو الهاتف.',
-      address: 'العنوان',
-      hours: 'ساعات العمل',
-      hoursTime: '10 صباحاً - 10 مساءً',
-      addressLine1: 'منطقة الرعاية الصحية - مكتب 14',
-      addressLine2: 'عمان - الأردن',
-    }
+      subtitle: 'تواصل معنا للاستفسار عن المنتجات ودعم الطلبات',
+      emailLabel: 'البريد الإلكتروني',
+      whatsappLabel: 'واتساب',
+    },
   } as const;
 
   const t = labels[language];
+  const { email, phoneDisplay, phoneTel } = footer.contact;
 
   return (
     <div className="relative min-h-screen bg-black text-zinc-100" dir={language === 'ar' ? 'rtl' : 'ltr'}>
@@ -70,36 +61,46 @@ const Contact = () => {
       <div className="relative z-10">
         <Header language={language} onLanguageChange={setLanguage} />
 
-        <section className="pb-20 pt-28">
-          <div className="container mx-auto px-4">
+        <section className="contact-page pb-24 pt-28">
+          <div className="container mx-auto max-w-4xl px-4">
             <div className="mb-4 text-start">
               <Button
                 variant="ghost"
                 onClick={() => navigate('/')}
                 className="text-zinc-300 hover:bg-white/10 hover:text-white"
               >
-                <ArrowLeft className={`w-4 h-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                <ArrowLeft className={`h-4 w-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
                 {language === 'en' ? 'Back to Home' : 'العودة للصفحة الرئيسية'}
               </Button>
             </div>
-            <div className="mb-12 text-center">
+
+            <div className="about-page__hero-head text-center">
               <motion.div
-                className="mb-6 flex justify-center py-4 sm:py-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
+                className="about-page__logo-stage"
+                initial={{ opacity: 0, y: 24, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.7, delay: 0.1 }}
               >
+                <div className="about-page__logo-glow" aria-hidden />
                 <motion.img
                   src={LOGO_URL}
                   alt={t.title}
-                  className="mx-auto h-24 w-auto max-w-[min(92vw,320px)] object-contain drop-shadow-[0_4px_28px_rgba(255,255,255,0.18)] sm:h-28 sm:max-w-[380px] md:h-32 md:max-w-[440px] lg:h-36 lg:max-w-[500px]"
+                  className="about-page__logo-img relative z-[1]"
                   decoding="async"
-                  animate={{ y: [0, -6, 0] }}
-                  transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
                 />
               </motion.div>
+              <motion.h1
+                className="about-page__heading mb-2 text-2xl font-semibold text-zinc-50 md:text-3xl lg:text-4xl"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.18 }}
+              >
+                {t.title}
+              </motion.h1>
               <motion.p
-                className="mx-auto max-w-2xl text-zinc-400"
+                className="mx-auto max-w-xl text-base text-zinc-400 md:text-lg"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.25 }}
@@ -108,81 +109,40 @@ const Contact = () => {
               </motion.p>
             </div>
 
-            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-2">
-              {/* Support */}
-              <Card className="luxury-card h-full">
-                <CardHeader className="pb-3 text-start">
-                  <CardTitle className="text-xl">{t.follow}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 text-start">
-                  <p className="text-sm leading-relaxed text-muted-foreground">{t.followIntro}</p>
+            <motion.div
+              className="contact-page__channels mt-10 md:mt-12"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.32 }}
+            >
+              <a
+                href={`mailto:${email}`}
+                className="contact-page__channel luxury-card group"
+              >
+                <span className="contact-page__channel-icon" aria-hidden>
+                  <Mail className="h-7 w-7" strokeWidth={1.5} />
+                </span>
+                <span className="contact-page__channel-label">{t.emailLabel}</span>
+                <span className="contact-page__channel-value" dir="ltr">
+                  {email}
+                </span>
+              </a>
 
-                  <div className="space-y-3">
-                    <ContactInfoRow icon={Mail}>
-                      <a href="mailto:info@dermacure.ae" className="font-medium hover:text-primary hover:underline">
-                        info@dermacure.ae
-                      </a>
-                    </ContactInfoRow>
-
-                    <ContactInfoRow icon={Phone}>
-                      <a
-                        href={`tel:${STORE_PHONE_TEL}`}
-                        className="font-medium hover:text-primary hover:underline"
-                        dir="ltr"
-                      >
-                        {STORE_PHONE_DISPLAY}
-                      </a>
-                    </ContactInfoRow>
-
-                    <ContactInfoRow icon={MapPin}>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t.address}</p>
-                      <p className="font-medium">{t.addressLine1}</p>
-                      <p className="text-muted-foreground">{t.addressLine2}</p>
-                    </ContactInfoRow>
-
-                    <ContactInfoRow icon={Clock}>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t.hours}</p>
-                      <p className="font-medium">{t.hoursTime}</p>
-                    </ContactInfoRow>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Contact Form */}
-              <Card className="luxury-card h-full">
-                <CardHeader className="pb-3 text-start">
-                  <CardTitle className="text-xl">{t.formTitle}</CardTitle>
-                </CardHeader>
-                <CardContent className="text-start">
-                  <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                    <Input
-                      placeholder={t.name}
-                      type="text"
-                      required
-                      dir={language === 'ar' ? 'rtl' : 'ltr'}
-                      style={{ textAlign: language === 'ar' ? 'right' : 'left' }}
-                    />
-                    <Input
-                      placeholder={t.email}
-                      type="email"
-                      required
-                      dir={language === 'ar' ? 'rtl' : 'ltr'}
-                      style={{ textAlign: language === 'ar' ? 'right' : 'left' }}
-                    />
-                    <Textarea
-                      placeholder={t.message}
-                      className="min-h-[160px]"
-                      required
-                      dir={language === 'ar' ? 'rtl' : 'ltr'}
-                      style={{ textAlign: language === 'ar' ? 'right' : 'left' }}
-                    />
-                    <Button type="submit" className="btn-primary inline-flex w-full items-center gap-2 sm:w-auto">
-                      <Send className="h-4 w-4" /> {t.send}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
+              <a
+                href={phoneTelToWhatsAppUrl(phoneTel)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="contact-page__channel contact-page__channel--whatsapp luxury-card group"
+              >
+                <span className="contact-page__channel-icon" aria-hidden>
+                  <WhatsAppIcon className="h-7 w-7" />
+                </span>
+                <span className="contact-page__channel-label">{t.whatsappLabel}</span>
+                <span className="contact-page__channel-value" dir="ltr">
+                  {phoneDisplay}
+                </span>
+              </a>
+            </motion.div>
           </div>
         </section>
         <Footer />
@@ -192,5 +152,3 @@ const Contact = () => {
 };
 
 export default Contact;
-
-
