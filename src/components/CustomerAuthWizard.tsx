@@ -23,6 +23,8 @@ type Props = {
   embedded?: boolean;
   /** لوحة داكنة (نافذة الحساب) */
   darkPanel?: boolean;
+  /** نموذج مبسّط للبوابة: مستخدم، هاتف، بريد، كلمة مرور */
+  portalLayout?: boolean;
   /** إخفاء زر الإرسال داخل النموذج (يُعرض خارج منطقة التمرير في النافذة) */
   hideSubmit?: boolean;
   formId?: string;
@@ -90,6 +92,20 @@ function AuthField({
   );
 }
 
+function PortalField({ id, label, children }: { id: string; label: string; children: ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id} className="block text-start text-sm font-medium text-zinc-50">
+        {label}
+      </Label>
+      {children}
+    </div>
+  );
+}
+
+const portalInputClass =
+  'h-11 border-zinc-700/80 bg-zinc-900/80 text-zinc-50 shadow-sm placeholder:text-zinc-600 focus-visible:border-zinc-600 focus-visible:ring-zinc-600/40';
+
 const inputBase = (embedded: boolean, dark: boolean, extra?: string) =>
   cn(
     'h-11 ps-10 text-start',
@@ -107,6 +123,7 @@ const CustomerAuthWizard = ({
   showIntro = true,
   embedded = false,
   darkPanel = false,
+  portalLayout = false,
   hideSubmit = false,
   formId = CUSTOMER_REGISTER_FORM_ID,
 }: Props) => {
@@ -146,15 +163,19 @@ const CustomerAuthWizard = ({
       toast.error(language === 'ar' ? 'كلمتا المرور غير متطابقتين.' : 'Passwords do not match.');
       return;
     }
-    const first = firstName.trim();
-    const last = lastName.trim();
-    if (!first) {
-      toast.error(language === 'ar' ? 'أدخل الاسم الأول.' : 'Please enter your first name.');
-      return;
-    }
-    if (!last) {
-      toast.error(language === 'ar' ? 'أدخل اسم العائلة.' : 'Please enter your last name.');
-      return;
+    let displayName = u;
+    if (!portalLayout) {
+      const first = firstName.trim();
+      const last = lastName.trim();
+      if (!first) {
+        toast.error(language === 'ar' ? 'أدخل الاسم الأول.' : 'Please enter your first name.');
+        return;
+      }
+      if (!last) {
+        toast.error(language === 'ar' ? 'أدخل اسم العائلة.' : 'Please enter your last name.');
+        return;
+      }
+      displayName = `${first} ${last}`;
     }
     if (!emailLooksValid(email)) {
       toast.error(language === 'ar' ? 'أدخل بريداً إلكترونياً صحيحاً.' : 'Please enter a valid email address.');
@@ -172,7 +193,7 @@ const CustomerAuthWizard = ({
     const result = registerCustomer({
       username: u,
       password,
-      name: `${first} ${last}`,
+      name: displayName,
       email: email.trim(),
       phone: buildJordanPhone(phone),
     });
@@ -200,6 +221,120 @@ const CustomerAuthWizard = ({
 
   const sectionCredentials = language === 'ar' ? 'بيانات الدخول' : 'Sign-in details';
   const sectionPersonal = language === 'ar' ? 'معلوماتك' : 'Your details';
+
+  if (portalLayout) {
+    return (
+      <div dir={isRtl ? 'rtl' : 'ltr'} lang={isRtl ? 'ar' : 'en'}>
+        <form
+          id={formId}
+          onSubmit={onSubmit}
+          className="flex flex-col gap-4 rounded-xl border border-zinc-800/90 bg-zinc-900/50 p-4 sm:p-5"
+        >
+          <PortalField id="wiz-username" label={language === 'ar' ? 'اسم المستخدم' : 'User Name'}>
+            <Input
+              id="wiz-username"
+              autoComplete="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              onKeyDown={(e) => focusNextOnTabOrEnter(e, passwordRef)}
+              enterKeyHint="next"
+              dir="ltr"
+              placeholder={language === 'ar' ? 'اسم المستخدم' : 'Username'}
+              className={portalInputClass}
+              required
+            />
+          </PortalField>
+
+          <PortalField id="wiz-phone" label={language === 'ar' ? 'رقم الهاتف' : 'Phone Number'}>
+            <div className="flex" dir="ltr">
+              <span
+                className="inline-flex shrink-0 items-center rounded-s-md border border-e-0 border-zinc-700/80 bg-zinc-900/90 px-3 font-mono text-sm font-medium text-zinc-300"
+                aria-hidden
+              >
+                +962
+              </span>
+              <Input
+                id="wiz-phone"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel-national"
+                value={phone}
+                onChange={(e) => onPhoneChange(sanitizeJordanLocalDigits(e.target.value))}
+                onKeyDown={(e) => {
+                  const nav = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+                  if (nav.includes(e.key) || e.ctrlKey || e.metaKey) return;
+                  if (e.key.length === 1 && !/\d/.test(e.key)) e.preventDefault();
+                }}
+                onPaste={(e) => {
+                  e.preventDefault();
+                  onPhoneChange(sanitizeJordanLocalDigits(e.clipboardData.getData('text')));
+                }}
+                maxLength={JORDAN_PHONE_LOCAL_LENGTH}
+                placeholder="791234567"
+                dir="ltr"
+                className={cn(portalInputClass, 'rounded-s-none ps-3 font-mono tracking-wide')}
+                required
+              />
+            </div>
+          </PortalField>
+
+          <PortalField id="wiz-email" label={language === 'ar' ? 'البريد الإلكتروني' : 'Email'}>
+            <Input
+              id="wiz-email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              dir="ltr"
+              placeholder="name@email.com"
+              className={portalInputClass}
+              required
+            />
+          </PortalField>
+
+          <PortalField id="wiz-password" label={language === 'ar' ? 'كلمة المرور' : 'Password'}>
+            <Input
+              ref={passwordRef}
+              id="wiz-password"
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              enterKeyHint="next"
+              dir="ltr"
+              placeholder="••••••••"
+              className={portalInputClass}
+              required
+            />
+          </PortalField>
+
+          <PortalField
+            id="wiz-password-confirm"
+            label={language === 'ar' ? 'تأكيد كلمة المرور' : 'Confirm password'}
+          >
+            <Input
+              id="wiz-password-confirm"
+              type="password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              enterKeyHint="done"
+              dir="ltr"
+              placeholder="••••••••"
+              className={portalInputClass}
+              required
+            />
+          </PortalField>
+
+          {!hideSubmit ? (
+            <Button type="submit" className="btn-primary mt-1 h-11 w-full text-base font-semibold">
+              {language === 'ar' ? 'إنشاء حساب' : 'Sign Up'}
+            </Button>
+          ) : null}
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className={cn(embedded ? 'space-y-4' : 'space-y-5')} dir={isRtl ? 'rtl' : 'ltr'} lang={isRtl ? 'ar' : 'en'}>

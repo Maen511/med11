@@ -16,7 +16,6 @@ import { CUSTOMER_REGISTER_FORM_ID } from '@/components/CustomerAuthWizard';
 import { toast } from 'sonner';
 import { LOGO_URL } from '@/lib/branding';
 import { cn } from '@/lib/utils';
-import { UserPlus } from 'lucide-react';
 
 const CustomerAuthWizard = lazy(() => import('@/components/CustomerAuthWizard'));
 
@@ -123,9 +122,7 @@ const CustomerAuthDialog = ({ open, onOpenChange, language }: Props) => {
         onOpenAutoFocus={(e) => e.preventDefault()}
         className={cn(
           'flex max-h-[min(92dvh,820px)] w-[calc(100%-1.5rem)] flex-col gap-0 overflow-hidden border-0 bg-zinc-950 p-0 text-zinc-50 shadow-xl ring-1 ring-white/10 sm:rounded-2xl',
-          mode === 'register'
-            ? 'max-w-[min(100%,700px)] sm:max-w-[740px]'
-            : 'max-w-[min(100%,420px)] sm:max-w-[440px]',
+          'max-w-[min(100%,420px)] sm:max-w-[440px]',
         )}
         dir={isRtl ? 'rtl' : 'ltr'}
         lang={isRtl ? 'ar' : 'en'}
@@ -223,57 +220,45 @@ const CustomerAuthDialog = ({ open, onOpenChange, language }: Props) => {
             </Link>
           </div>
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col">
-            <div className="shrink-0 border-b border-zinc-800/80 bg-zinc-950 px-6 pb-4 pt-9 text-center sm:px-8">
+          <div className="flex max-h-[min(92dvh,820px)] flex-col overflow-y-auto overscroll-contain px-7 pb-8 pt-10 sm:px-9 sm:pb-10 sm:pt-11">
+            <div className="mx-auto mb-6 flex w-full max-w-sm flex-col items-center text-center">
               <img
                 src={LOGO_URL}
                 alt="BIOSKIN"
-                className="mx-auto mb-3 h-14 w-auto max-w-[180px] object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.22)]"
+                className="mb-4 h-16 w-auto max-w-[200px] object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.22)] sm:h-[4.25rem]"
                 decoding="async"
               />
-              <h2 className="text-xl font-semibold tracking-tight text-zinc-50">
-                {language === 'ar' ? 'إنشاء حساب' : 'Create account'}
+              <h2 className="text-2xl font-semibold tracking-tight text-zinc-50 sm:text-[1.65rem]">
+                {language === 'ar' ? 'إنشاء حساب' : 'Sign Up'}
               </h2>
-              <button
-                type="button"
-                className="mt-3 text-sm font-medium text-zinc-300 transition-colors hover:text-zinc-50"
-                onClick={() => setMode('login')}
-              >
-                {language === 'ar' ? 'لديك حساب بالفعل؟ سجّل الدخول' : 'Already have an account? Login'}
-              </button>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6">
-              <Suspense
-                fallback={
-                  <p className="py-10 text-center text-sm text-zinc-500" role="status">
-                    {registerFallback}
-                  </p>
-                }
-              >
-                <CustomerAuthWizard
-                  key={registerKey}
-                  language={language}
-                  showIntro={false}
-                  embedded
-                  darkPanel
-                  hideSubmit
-                  formId={CUSTOMER_REGISTER_FORM_ID}
-                  onRegistered={goAddressesAfterRegister}
-                />
-              </Suspense>
-            </div>
+            <Suspense
+              fallback={
+                <p className="py-10 text-center text-sm text-zinc-500" role="status">
+                  {registerFallback}
+                </p>
+              }
+            >
+              <CustomerAuthWizard
+                key={registerKey}
+                language={language}
+                showIntro={false}
+                embedded
+                darkPanel
+                portalLayout
+                formId={CUSTOMER_REGISTER_FORM_ID}
+                onRegistered={goAddressesAfterRegister}
+              />
+            </Suspense>
 
-            <div className="shrink-0 border-t border-zinc-800/90 bg-zinc-950 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
-              <Button
-                type="submit"
-                form={CUSTOMER_REGISTER_FORM_ID}
-                className="btn-primary h-11 w-full gap-2 text-base font-semibold"
-              >
-                <UserPlus className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                {language === 'ar' ? 'إنشاء الحساب' : 'Create account'}
-              </Button>
-            </div>
+            <button
+              type="button"
+              className="mt-6 w-full text-center text-sm font-medium text-zinc-300 transition-colors hover:text-zinc-50"
+              onClick={() => setMode('login')}
+            >
+              {language === 'ar' ? 'لديك حساب بالفعل؟' : 'Already have an account?'}
+            </button>
           </div>
         )}
       </DialogContent>
