@@ -59,6 +59,72 @@ import {
   type AppliedInfluencerCode,
 } from '@/lib/influencerCodes';
 import { formatNumber } from '@/lib/formatNumbers';
+type CheckoutSuggestProduct = {
+  id: number;
+  name: { en: string; ar: string };
+  price: number;
+  image: string;
+  category: string;
+  inStock?: boolean;
+};
+
+function CheckoutSuggestRail({
+  products,
+  language,
+  currencyTitle,
+  onAdd,
+  addLabel,
+  soldOutLabel,
+}: {
+  products: CheckoutSuggestProduct[];
+  language: 'en' | 'ar';
+  currencyTitle: string;
+  onAdd: (p: CheckoutSuggestProduct) => void;
+  addLabel: string;
+  soldOutLabel: string;
+}) {
+  if (products.length === 0) return null;
+
+  return (
+    <div
+      className="checkout-suggest-rail flex gap-3 overflow-x-auto overflow-y-hidden overscroll-x-contain pb-2 pt-0.5 scroll-smooth snap-x snap-mandatory [-webkit-overflow-scrolling:touch]"
+      dir="ltr"
+    >
+      {products.map((p) => (
+        <article
+          key={p.id}
+          className="checkout-suggest-card flex w-[min(72vw,10.75rem)] shrink-0 snap-center flex-col gap-2 rounded-xl border border-border/50 bg-card/80 p-2.5 text-start shadow-sm"
+          dir={language === 'ar' ? 'rtl' : 'ltr'}
+        >
+          <div className="relative mx-auto aspect-square w-full max-w-[7.5rem] overflow-hidden rounded-lg border border-border/40 bg-muted/30">
+            <CartProductImage
+              productId={p.id}
+              image={p.image}
+              alt={p.name[language]}
+              className="h-full w-full p-1.5"
+            />
+          </div>
+          <h3 className="line-clamp-2 min-h-[2.5rem] text-xs font-semibold leading-snug text-foreground">
+            {p.name[language]}
+          </h3>
+          <p className="text-sm font-semibold text-primary" dir="ltr">
+            {p.price}{' '}
+            <CurrencyIcon className="inline-block h-3.5 w-3.5 align-[-1px]" title={currencyTitle} />
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            className="btn-primary mt-auto h-9 w-full text-xs"
+            disabled={p.inStock === false}
+            onClick={() => onAdd(p)}
+          >
+            {p.inStock !== false ? addLabel : soldOutLabel}
+          </Button>
+        </article>
+      ))}
+    </div>
+  );
+}
 
 const Checkout: React.FC = () => {
   const GUEST_ADDRESS_KEY = 'med-addresses:guest';
@@ -846,37 +912,15 @@ const Checkout: React.FC = () => {
                     </Link>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 gap-4 text-start sm:grid-cols-2">
-                  {wishlistPicks.map((p) => (
-                    <div key={p.id} className="flex items-center gap-3 rounded-lg border p-2">
-                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md border border-border/50 bg-muted/30">
-                        <CartProductImage
-                          productId={p.id}
-                          image={p.image}
-                          alt={p.name[language]}
-                          className="h-full w-full p-1"
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-medium">{p.name[language]}</div>
-                        <div className="mt-0.5 text-xs text-muted-foreground">
-                          {p.price}{' '}
-                          <CurrencyIcon
-                            className="inline-block h-3.5 w-3.5 align-[-1px]"
-                            title={texts[language].currency}
-                          />
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        className="btn-primary shrink-0"
-                        disabled={!p.inStock}
-                        onClick={() => addWishlistToCart(p)}
-                      >
-                        {p.inStock ? texts[language].addToCart : texts[language].soldOut}
-                      </Button>
-                    </div>
-                  ))}
+                <CardContent className="px-3 pb-3 pt-0 sm:px-4">
+                  <CheckoutSuggestRail
+                    products={wishlistPicks}
+                    language={language}
+                    currencyTitle={texts[language].currency}
+                    onAdd={addWishlistToCart}
+                    addLabel={texts[language].addToCart}
+                    soldOutLabel={texts[language].soldOut}
+                  />
                 </CardContent>
               </Card>
             )}
@@ -886,46 +930,24 @@ const Checkout: React.FC = () => {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base text-start">{sameSectionSuggestions.heading}</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 gap-4 text-start sm:grid-cols-2">
-                  {sameSectionSuggestions.products.map((p) => (
-                    <div key={p.id} className="flex items-center gap-3 rounded-lg border p-2">
-                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md border border-border/50 bg-muted/30">
-                        <CartProductImage
-                          productId={p.id}
-                          image={p.image}
-                          alt={p.name[language]}
-                          className="h-full w-full p-1"
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-medium">{p.name[language]}</div>
-                        <div className="mt-0.5 text-xs text-muted-foreground">
-                          {p.price}{' '}
-                          <CurrencyIcon
-                            className="inline-block h-3.5 w-3.5 align-[-1px]"
-                            title={texts[language].currency}
-                          />
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        disabled={!p.inStock}
-                        onClick={() =>
-                          addToCart({
-                            id: p.id,
-                            name: p.name,
-                            price: p.price,
-                            image: p.image,
-                            category: p.category,
-                            variantName: cartVariantKey('box'),
-                          })
-                        }
-                        className="btn-primary shrink-0"
-                      >
-                        {p.inStock ? (language === 'ar' ? 'أضف' : 'Add') : texts[language].soldOut}
-                      </Button>
-                    </div>
-                  ))}
+                <CardContent className="px-3 pb-3 pt-0 sm:px-4">
+                  <CheckoutSuggestRail
+                    products={sameSectionSuggestions.products}
+                    language={language}
+                    currencyTitle={texts[language].currency}
+                    onAdd={(p) =>
+                      addToCart({
+                        id: p.id,
+                        name: p.name,
+                        price: p.price,
+                        image: p.image,
+                        category: p.category,
+                        variantName: cartVariantKey('box'),
+                      })
+                    }
+                    addLabel={language === 'ar' ? 'أضف' : 'Add'}
+                    soldOutLabel={texts[language].soldOut}
+                  />
                 </CardContent>
               </Card>
             ) : null}

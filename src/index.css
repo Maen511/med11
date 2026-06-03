@@ -108,6 +108,22 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Checkout — horizontal suggest rails (swipe left/right) */
+.checkout-suggest-rail {
+  scroll-padding-inline: 0.75rem;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / 0.35) transparent;
+}
+
+.checkout-suggest-rail::-webkit-scrollbar {
+  height: 5px;
+}
+
+.checkout-suggest-rail::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: hsl(var(--primary) / 0.35);
+}
+
 /* Checkout — mobile-first layout */
 .checkout-line-image {
   flex-shrink: 0;
