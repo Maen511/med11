@@ -49,18 +49,25 @@ const OrderStatusStepper = ({
     >
       <div className={cn('flex items-start justify-between', compact ? 'gap-0.5' : 'gap-1')}>
         {ORDER_TRACK_STEPS.map((step, index) => {
-          const isComplete = index < activeIndex;
           const isCurrent = index === activeIndex;
           const isFuture = index > activeIndex;
-          const lineFilled = index < ORDER_TRACK_STEPS.length - 1 && index < activeIndex;
+          /** «تم التوصيل» = اكتمال كامل — أخضر وليس لون المرحلة الحالية (أبيض/أساسي) */
+          const isDeliveredFinal = isCurrent && step === 'delivered';
+          const isComplete = index < activeIndex || isDeliveredFinal;
+          const lineFilled = index > 0 && index <= activeIndex;
 
           const circle = (
             <span
               className={cn(
                 'relative z-10 flex shrink-0 items-center justify-center rounded-full border-2 font-semibold transition-all',
                 compact ? 'h-7 w-7 text-[10px]' : 'h-9 w-9 text-xs',
-                isComplete && 'border-emerald-600 bg-emerald-600 text-white',
+                isComplete &&
+                  cn(
+                    'border-emerald-600 bg-emerald-600 text-white shadow-sm',
+                    isDeliveredFinal && (compact ? 'ring-2 ring-emerald-500/35' : 'ring-4 ring-emerald-500/30'),
+                  ),
                 isCurrent &&
+                  !isDeliveredFinal &&
                   cn(
                     'border-primary bg-primary text-primary-foreground shadow-md',
                     compact ? 'ring-2 ring-primary/20' : 'ring-4 ring-primary/20',
@@ -113,8 +120,8 @@ const OrderStatusStepper = ({
                   className={cn(
                     'cursor-pointer rounded-md px-0.5 text-center leading-tight transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                     compact ? 'mt-1.5 max-w-[3.75rem] text-[9px]' : 'mt-2 max-w-[5.5rem] text-[10px] sm:max-w-none sm:text-xs',
-                    isCurrent && 'font-semibold text-foreground',
-                    isComplete && 'text-emerald-700 dark:text-emerald-400',
+                    (isComplete || isDeliveredFinal) && 'font-semibold text-emerald-700 dark:text-emerald-400',
+                    isCurrent && !isDeliveredFinal && 'font-semibold text-foreground',
                     isFuture && 'text-muted-foreground',
                   )}
                 >
@@ -125,8 +132,8 @@ const OrderStatusStepper = ({
                   className={cn(
                     'text-center leading-tight',
                     compact ? 'mt-1.5 max-w-[3.75rem] text-[9px]' : 'mt-2 max-w-[5.5rem] text-[10px] sm:max-w-none sm:text-xs',
-                    isCurrent && 'font-semibold text-foreground',
-                    isComplete && 'text-emerald-700 dark:text-emerald-400',
+                    (isComplete || isDeliveredFinal) && 'font-semibold text-emerald-700 dark:text-emerald-400',
+                    isCurrent && !isDeliveredFinal && 'font-semibold text-foreground',
                     isFuture && 'text-muted-foreground',
                   )}
                 >

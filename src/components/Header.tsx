@@ -19,6 +19,14 @@ import { LOGO_URL } from '@/lib/branding';
 import { notifyCatalogAccessPending } from '@/lib/catalogAccessToast';
 import CustomerAuthDialog from '@/components/CustomerAuthDialog';
 import { WishlistAlertsBell } from '@/components/WishlistAlertsBell';
+import { CustomerOrderNotificationsBell } from '@/components/CustomerOrderNotificationsBell';
+import {
+  CUSTOMER_ORDER_STATUS_EVENT,
+  formatCustomerOrderNotificationBody,
+  formatCustomerOrderNotificationTitle,
+  notificationBelongsToCustomer,
+  type CustomerOrderNotification,
+} from '@/lib/customerOrderNotifications';
 import { storeProductsPath } from '@/lib/storeNav';
 
 interface HeaderProps {
@@ -112,6 +120,27 @@ const Header = ({ language, onLanguageChange, isStatic = false }: HeaderProps) =
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isLoggedIn || isAdmin) return;
+    const lang = language === 'ar' ? 'ar' : 'en';
+    const handler = (e: Event) => {
+      const n = (e as CustomEvent<{ notification?: CustomerOrderNotification }>).detail
+        ?.notification;
+      if (!n || !notificationBelongsToCustomer(n, user?.email, user?.username)) return;
+      const title = formatCustomerOrderNotificationTitle(n, lang);
+      const body = formatCustomerOrderNotificationBody(n, lang);
+      toast.info(title, {
+        description: body,
+        action: {
+          label: lang === 'ar' ? 'طلباتي' : 'My orders',
+          onClick: () => navigate('/orders'),
+        },
+      });
+    };
+    window.addEventListener(CUSTOMER_ORDER_STATUS_EVENT, handler);
+    return () => window.removeEventListener(CUSTOMER_ORDER_STATUS_EVENT, handler);
+  }, [isLoggedIn, isAdmin, language, navigate, user?.email, user?.username]);
 
   useEffect(() => {
     if (!isMobileMenuOpen) return;
@@ -330,6 +359,15 @@ const Header = ({ language, onLanguageChange, isStatic = false }: HeaderProps) =
 
             {canAccessCatalog ? (
               <WishlistAlertsBell language={language} buttonClassName={accountButtonClass} />
+            ) : null}
+
+            {isLoggedIn && !isAdmin ? (
+              <CustomerOrderNotificationsBell
+                language={language}
+                email={user?.email}
+                username={user?.username}
+                buttonClassName={accountButtonClass}
+              />
             ) : null}
 
             {isLoggedIn ? (

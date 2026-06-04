@@ -1,3 +1,4 @@
+import { notifyCustomerOrderStatusUpdate } from '@/lib/customerOrderNotifications';
 import { getCustomerAccount } from '@/lib/customerAccounts';
 import { readCustomerAddresses } from '@/lib/customerAddresses';
 import {
@@ -394,5 +395,6 @@ export function updateInvoiceStatus(invoiceId: string, status: OrderTrackStatus 
 
     arr[i] = updated;
     localStorage.setItem(INVOICES_KEY, JSON.stringify(arr));
+    notifyCustomerOrderStatusUpdate(updated, prev);
   } catch {}
 }

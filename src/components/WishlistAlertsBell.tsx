@@ -1,4 +1,5 @@
-import { Bell, Package, TrendingDown, X } from 'lucide-react';
+import { Heart, Package, TrendingDown, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -56,7 +57,12 @@ export function WishlistAlertsBell({ language, buttonClassName }: Props) {
           aria-label={title}
           title={title}
         >
-          <Bell className="h-4 w-4" />
+          <Heart
+            className={cn(
+              'h-4 w-4 transition-colors',
+              count > 0 && 'fill-rose-500 text-rose-500',
+            )}
+          />
           {count > 0 ? (
             <Badge
               variant="destructive"
