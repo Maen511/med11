@@ -9,7 +9,6 @@ import {
   Clock,
   CheckCircle2,
   Truck,
-  Wallet,
 } from 'lucide-react';
 import AdminStatCard from '@/components/admin/AdminStatCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -87,7 +86,6 @@ const AdminOverviewPanel = ({ language, sections, productSkuCount, sectionCount 
             topViewed: 'الأكثر مشاهدة',
             orderStatus: 'حالة الطلبات',
             pending: 'تم الطلب',
-            paid: 'تم الدفع',
             delivering: 'في الطريق',
             delivered: 'تم التوصيل',
             units: 'قطعة',
@@ -105,7 +103,6 @@ const AdminOverviewPanel = ({ language, sections, productSkuCount, sectionCount 
             topViewed: 'Most viewed',
             orderStatus: 'Order status',
             pending: 'Order placed',
-            paid: 'Paid',
             delivering: 'On the way',
             delivered: 'Delivered',
             units: 'units',
@@ -134,14 +131,12 @@ const AdminOverviewPanel = ({ language, sections, productSkuCount, sectionCount 
       0,
     );
     let pending = 0;
-    let paid = 0;
     let delivering = 0;
     let delivered = 0;
     for (const inv of storeInvoices) {
       const s = normalizeInvoiceStatus(inv.status);
       if (s === 'delivered') delivered += 1;
       else if (s === 'delivering') delivering += 1;
-      else if (s === 'paid') paid += 1;
       else pending += 1;
     }
     return {
@@ -150,10 +145,9 @@ const AdminOverviewPanel = ({ language, sections, productSkuCount, sectionCount 
       weekOrders: weekInvoices.length,
       orderCount: storeInvoices.length,
       pending,
-      paid,
       delivering,
       delivered,
-      openOrders: pending + paid + delivering,
+      openOrders: pending + delivering,
     };
   }, [storeInvoices, catalog.ids, weekStart]);
 
@@ -209,7 +203,6 @@ const AdminOverviewPanel = ({ language, sections, productSkuCount, sectionCount 
 
   const statusTiles = [
     { key: 'pending', label: t.pending, value: salesStats.pending, icon: Clock, tone: 'warning' as const },
-    { key: 'paid', label: t.paid, value: salesStats.paid, icon: Wallet, tone: 'default' as const },
     { key: 'delivering', label: t.delivering, value: salesStats.delivering, icon: Truck, tone: 'default' as const },
     { key: 'delivered', label: t.delivered, value: salesStats.delivered, icon: CheckCircle2, tone: 'success' as const },
   ];

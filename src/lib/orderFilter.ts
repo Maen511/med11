@@ -1,12 +1,14 @@
 import {
+  getInvoiceCustomerPhones,
+  getInvoiceDeliveryLocation,
   normalizeInvoiceStatus,
   paymentMethodLabel,
   type InvoicePaymentMethod,
-  type InvoiceStatus,
+  type OrderTrackStatus,
   type StoredInvoice,
 } from '@/lib/invoices';
 
-export type OrderStatusFilter = 'all' | InvoiceStatus;
+export type OrderStatusFilter = 'all' | OrderTrackStatus;
 
 export type OrderPaymentFilter = 'all' | InvoicePaymentMethod;
 
@@ -21,6 +23,8 @@ export function filterAndSortOrders(
     sort: OrderSort;
     /** بحث في بيانات العميل (لوحة الأدمن) */
     includeCustomerInSearch?: boolean;
+    /** نص إضافي للبحث (مثلاً تواريخ الفاتورة) */
+    extraSearchText?: (inv: StoredInvoice) => string;
     language?: 'en' | 'ar';
   },
 ): StoredInvoice[] {
@@ -48,7 +52,14 @@ export function filterAndSortOrders(
       opts.includeCustomerInSearch ? inv.customerEmail : '',
       opts.includeCustomerInSearch ? inv.customerUsername : '',
       opts.includeCustomerInSearch ? inv.customerName : '',
+      opts.includeCustomerInSearch ? inv.customerPhone : '',
+      opts.includeCustomerInSearch ? inv.deliveryAddress : '',
+      opts.includeCustomerInSearch ? inv.deliveryCity : '',
+      opts.includeCustomerInSearch ? inv.deliveryLabel : '',
+      opts.includeCustomerInSearch ? getInvoiceCustomerPhones(inv).join(' ') : '',
+      opts.includeCustomerInSearch ? getInvoiceDeliveryLocation(inv, lang) : '',
       paymentMethodLabel(method, lang),
+      opts.extraSearchText?.(inv) ?? '',
     ]
       .filter(Boolean)
       .join(' ')

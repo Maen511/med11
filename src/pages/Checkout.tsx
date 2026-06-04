@@ -416,6 +416,14 @@ const Checkout: React.FC = () => {
 
   const saveInvoice = () => {
     try {
+      const selKey = user?.email ? `med-selected-address:${user.email}` : GUEST_SELECTED_ADDRESS_KEY;
+      let effectiveId = selectedAddressId;
+      try {
+        effectiveId = (selKey && localStorage.getItem(selKey)) || selectedAddressId;
+      } catch {}
+      const chosen = addresses.find((a) => a.id === effectiveId);
+      const phone = chosen?.phone?.trim() || user?.phone?.trim();
+
       const invoice = {
         id: Math.random().toString(36).slice(2, 8).toUpperCase(),
         createdAt: Date.now(),
@@ -434,7 +442,11 @@ const Checkout: React.FC = () => {
         influencerName: orderPricing.code?.influencerName,
         customerEmail: user?.email?.trim().toLowerCase(),
         customerUsername: user?.username?.trim().toLowerCase(),
-        customerName: user?.name?.trim() || undefined,
+        customerName: user?.name?.trim() || chosen?.fullName?.trim() || undefined,
+        customerPhone: phone || undefined,
+        deliveryCity: chosen?.city?.trim() || undefined,
+        deliveryAddress: chosen?.details?.trim() || undefined,
+        deliveryLabel: chosen?.label?.trim() || undefined,
         status: 'pending' as const,
         paymentMethod: 'cod' as const,
       };

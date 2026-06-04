@@ -1,4 +1,4 @@
-import { getInvoices, type StoredInvoice } from '@/lib/invoices';
+import { getInvoiceCustomerDisplayName, getInvoices, type StoredInvoice } from '@/lib/invoices';
 
 const SEEN_INVOICES_KEY = 'med-admin-seen-invoice-ids';
 
@@ -113,7 +113,7 @@ export function notifyAdminNewOrder(inv: StoredInvoice): boolean {
   const entry: AdminOrderNotification = {
     invoiceId: inv.id,
     createdAt: inv.createdAt,
-    customerName: inv.customerName,
+    customerName: getInvoiceCustomerDisplayName(inv, 'ar'),
     customerUsername: inv.customerUsername,
     total: inv.total,
     itemCount: inv.items.length,
@@ -161,12 +161,9 @@ export function dismissAllAdminOrderNotifications() {
 export function formatAdminOrderNotificationTitle(
   n: AdminOrderNotification,
   lang: 'en' | 'ar',
+  inv?: StoredInvoice,
 ): string {
-  const name =
-    n.customerName?.trim() ||
-    (n.customerUsername ? n.customerUsername : '') ||
-    (lang === 'ar' ? 'عميل' : 'Customer');
-  return name;
+  return resolveNotificationCustomerName(n, inv, lang);
 }
 
 export function formatAdminOrderNotificationBody(
@@ -180,8 +177,8 @@ export function formatAdminOrderNotificationBody(
       ? `${n.itemCount} منتج`
       : `${n.itemCount} item(s)`;
   return lang === 'ar'
-    ? `${items} · ${n.total.toFixed(2)} ${currency}`
-    : `${items} · ${n.total.toFixed(2)} ${currency}`;
+    ? `${items} · ${n.total.toFixed(2)} ${currency} · #${n.invoiceId}`
+    : `${items} · ${n.total.toFixed(2)} ${currency} · #${n.invoiceId}`;
 }
 
 /** للعرض في القائمة — يستكمل الاسم من الفاتورة إن لزم */

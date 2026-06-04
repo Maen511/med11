@@ -20,7 +20,6 @@ import { CATALOG_CHANGED_EVENT } from '@/lib/catalogEvents';
 import { getInvoices, INVOICES_STORAGE_KEY, type StoredInvoice } from '@/lib/invoices';
 import {
   formatAdminOrderNotificationBody,
-  markAllAdminOrderNotificationsRead,
   resolveNotificationCustomerName,
   scanForNewAdminOrders,
   type AdminOrderNotification,
@@ -71,8 +70,8 @@ const NAV_META: Record<
   orders: {
     titleEn: 'Order tracking',
     titleAr: 'تتبع الطلبات',
-    subtitleEn: 'Update delivery progress by tapping each stage.',
-    subtitleAr: 'حدّث مرحلة التوصيل بالضغط على الكرات.',
+    subtitleEn: '',
+    subtitleAr: '',
   },
   bonus: {
     titleEn: 'Bonus',
@@ -168,7 +167,7 @@ const AdminDashboard = () => {
       const title = resolveNotificationCustomerName(n, detail?.invoice, lang);
       const body = formatAdminOrderNotificationBody(n, lang);
       toast.success(
-        isRtl ? `طلب جديد من ${title}` : `New order from ${title}`,
+        isRtl ? `طلب جديد — ${title}` : `New order — ${title}`,
         {
           description: body,
           action: {
@@ -181,10 +180,6 @@ const AdminDashboard = () => {
     window.addEventListener('med-admin-new-order', handler);
     return () => window.removeEventListener('med-admin-new-order', handler);
   }, [isAdmin, isRtl]);
-
-  useEffect(() => {
-    if (active === 'orders') markAllAdminOrderNotificationsRead();
-  }, [active]);
 
   useEffect(() => {
     if (!isAdmin) return;

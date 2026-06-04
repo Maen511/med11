@@ -173,6 +173,7 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
           noFilterMatch: 'لا توجد أكواد تطابق البحث.',
           sectionAll: 'كل الأقسام',
           sectionOne: 'قسم واحد فقط',
+          scopeApplies: 'يُطبَّق على',
           pickSection: 'اختر القسم',
           filterSection: 'القسم',
           filterSectionAll: 'كل الأقسام',
@@ -237,6 +238,7 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
           noFilterMatch: 'No codes match your search.',
           sectionAll: 'All sections',
           sectionOne: 'One section only',
+          scopeApplies: 'Applies to',
           pickSection: 'Select section',
           filterSection: 'Section',
           filterSectionAll: 'All sections',
@@ -473,44 +475,37 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
         </div>
       </FormSection>
 
-      <FormSection
-        title={t.formScope}
-        className={cn('h-full', form.sectionScope === 'section' && 'md:col-span-2')}
-      >
-        <div
-          className={cn(
-            'grid gap-3',
-            form.sectionScope === 'section' ? 'sm:grid-cols-2' : 'grid-cols-1',
-          )}
-        >
-          <div className="space-y-1.5">
-            <Select
-              value={form.sectionScope}
-              onValueChange={(v) =>
-                setForm((f) => ({
-                  ...f,
-                  sectionScope: v as InfluencerSectionScope,
-                  sectionId: v === 'all' ? '' : f.sectionId,
-                }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="z-[200]">
-                <SelectItem value="all">{t.sectionAll}</SelectItem>
-                <SelectItem value="section">{t.sectionOne}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {form.sectionScope === 'section' ? (
+      <FormSection title={t.formScope} className="md:col-span-2">
+        {form.sectionScope === 'section' ? (
+          <div className="grid gap-4 sm:grid-cols-2 sm:items-start">
             <div className="space-y-1.5">
-              <Label>{t.pickSection}</Label>
+              <Label htmlFor="inf-scope">{t.scopeApplies}</Label>
+              <Select
+                value={form.sectionScope}
+                onValueChange={(v) =>
+                  setForm((f) => ({
+                    ...f,
+                    sectionScope: v as InfluencerSectionScope,
+                    sectionId: v === 'all' ? '' : f.sectionId,
+                  }))
+                }
+              >
+                <SelectTrigger id="inf-scope">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="z-[200]">
+                  <SelectItem value="all">{t.sectionAll}</SelectItem>
+                  <SelectItem value="section">{t.sectionOne}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="inf-section">{t.pickSection}</Label>
               <Select
                 value={form.sectionId || undefined}
                 onValueChange={(v) => setForm((f) => ({ ...f, sectionId: v }))}
               >
-                <SelectTrigger>
+                <SelectTrigger id="inf-section">
                   <SelectValue placeholder={t.pickSection} />
                 </SelectTrigger>
                 <SelectContent className="z-[200]">
@@ -522,20 +517,34 @@ const AdminInfluencerCodesPanel = ({ language }: Props) => {
                 </SelectContent>
               </Select>
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : (
+          <div className="max-w-md space-y-1.5">
+            <Label htmlFor="inf-scope">{t.scopeApplies}</Label>
+            <Select
+              value={form.sectionScope}
+              onValueChange={(v) =>
+                setForm((f) => ({
+                  ...f,
+                  sectionScope: v as InfluencerSectionScope,
+                  sectionId: v === 'all' ? '' : f.sectionId,
+                }))
+              }
+            >
+              <SelectTrigger id="inf-scope">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="z-[200]">
+                <SelectItem value="all">{t.sectionAll}</SelectItem>
+                <SelectItem value="section">{t.sectionOne}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </FormSection>
 
-      <FormSection
-        title={t.formLimits}
-        className={cn('h-full', form.sectionScope === 'section' && 'md:col-span-2')}
-      >
-        <div
-          className={cn(
-            'grid gap-3 sm:items-end',
-            form.sectionScope === 'section' ? 'sm:grid-cols-3' : 'sm:grid-cols-2',
-          )}
-        >
+      <FormSection title={t.formLimits} className="md:col-span-2">
+        <div className="grid gap-3 sm:grid-cols-2 sm:items-end lg:grid-cols-3">
           <div className="space-y-1.5">
             <Label htmlFor="inf-expiry">
               {t.expiry}{' '}

@@ -1,25 +1,45 @@
+import type { MouseEvent } from 'react';
 import { Check } from 'lucide-react';
 import {
   ORDER_TRACK_STEPS,
   orderStepIndex,
   orderStepLabel,
-  type InvoiceStatus,
+  type OrderTrackStatus,
 } from '@/lib/invoices';
 import { cn } from '@/lib/utils';
 
 type Props = {
   status?: string;
   language: 'en' | 'ar';
-  onStatusChange?: (status: InvoiceStatus) => void;
+  onStatusChange?: (status: OrderTrackStatus) => void;
+  /** إن وُجدت: فقط هذه المراحل قابلة للنقر */
+  clickableSteps?: OrderTrackStatus[];
   readOnly?: boolean;
   compact?: boolean;
   className?: string;
 };
 
-const OrderStatusStepper = ({ status, language, onStatusChange, readOnly, compact, className }: Props) => {
+const OrderStatusStepper = ({
+  status,
+  language,
+  onStatusChange,
+  clickableSteps,
+  readOnly,
+  compact,
+  className,
+}: Props) => {
   const lang = language === 'ar' ? 'ar' : 'en';
   const activeIndex = orderStepIndex(status);
   const interactive = Boolean(onStatusChange) && !readOnly;
+  const canClickStep = (step: OrderTrackStatus) =>
+    interactive && clickableSteps != null && clickableSteps.includes(step);
+
+  const fireStatusChange = (step: OrderTrackStatus, e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!canClickStep(step)) return;
+    onStatusChange?.(step);
+  };
 
   return (
     <div
@@ -46,7 +66,7 @@ const OrderStatusStepper = ({ status, language, onStatusChange, readOnly, compac
                     compact ? 'ring-2 ring-primary/20' : 'ring-4 ring-primary/20',
                   ),
                 isFuture && 'border-muted-foreground/35 bg-muted/50 text-muted-foreground',
-                interactive &&
+                canClickStep(step) &&
                   'cursor-pointer hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
               )}
             >
@@ -70,10 +90,10 @@ const OrderStatusStepper = ({ status, language, onStatusChange, readOnly, compac
                     aria-hidden
                   />
                 ) : null}
-                {interactive ? (
+                {canClickStep(step) ? (
                   <button
                     type="button"
-                    onClick={() => onStatusChange?.(step)}
+                    onClick={(e) => fireStatusChange(step, e)}
                     aria-label={orderStepLabel(step, lang)}
                     aria-current={isCurrent ? 'step' : undefined}
                     className="relative z-10 rounded-full"
@@ -86,17 +106,33 @@ const OrderStatusStepper = ({ status, language, onStatusChange, readOnly, compac
                   </div>
                 )}
               </div>
-              <p
-                className={cn(
-                  'text-center leading-tight',
-                  compact ? 'mt-1.5 max-w-[3.75rem] text-[9px]' : 'mt-2 max-w-[5.5rem] text-[10px] sm:max-w-none sm:text-xs',
-                  isCurrent && 'font-semibold text-foreground',
-                  isComplete && 'text-emerald-700 dark:text-emerald-400',
-                  isFuture && 'text-muted-foreground',
-                )}
-              >
-                {orderStepLabel(step, lang)}
-              </p>
+              {canClickStep(step) ? (
+                <button
+                  type="button"
+                  onClick={(e) => fireStatusChange(step, e)}
+                  className={cn(
+                    'cursor-pointer rounded-md px-0.5 text-center leading-tight transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    compact ? 'mt-1.5 max-w-[3.75rem] text-[9px]' : 'mt-2 max-w-[5.5rem] text-[10px] sm:max-w-none sm:text-xs',
+                    isCurrent && 'font-semibold text-foreground',
+                    isComplete && 'text-emerald-700 dark:text-emerald-400',
+                    isFuture && 'text-muted-foreground',
+                  )}
+                >
+                  {orderStepLabel(step, lang)}
+                </button>
+              ) : (
+                <p
+                  className={cn(
+                    'text-center leading-tight',
+                    compact ? 'mt-1.5 max-w-[3.75rem] text-[9px]' : 'mt-2 max-w-[5.5rem] text-[10px] sm:max-w-none sm:text-xs',
+                    isCurrent && 'font-semibold text-foreground',
+                    isComplete && 'text-emerald-700 dark:text-emerald-400',
+                    isFuture && 'text-muted-foreground',
+                  )}
+                >
+                  {orderStepLabel(step, lang)}
+                </p>
+              )}
             </div>
           );
         })}

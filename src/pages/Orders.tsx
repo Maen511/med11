@@ -15,7 +15,7 @@ import {
 import { getProductById } from '@/lib/products';
 import { CartProductImage } from '@/components/CartProductImage';
 import { CATALOG_IMAGES_HYDRATED_EVENT, prefetchCartProductImages, resolveStoredLineImage } from '@/lib/catalogImages';
-import { CheckCircle2, Clock, Truck, Wallet } from 'lucide-react';
+import { CheckCircle2, Clock, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BankTransferPaymentPanel } from '@/components/BankTransferPaymentPanel';
 import { SaleModeVariantBadge } from '@/components/ProductSaleModeBadge';
@@ -146,9 +146,7 @@ const Orders = () => {
                       ? CheckCircle2
                       : status === 'delivering'
                         ? Truck
-                        : status === 'paid'
-                          ? Wallet
-                          : Clock;
+                        : Clock;
                   return (
                     <Card key={inv.id} className="luxury-card overflow-hidden border shadow-sm">
                       <CardContent className="p-0">
