@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import CheckoutScrollPanel from '@/components/checkout/CheckoutScrollPanel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +29,7 @@ type Props = {
   /** عند الإضافة من الدفع: يُختار العنوان تلقائياً كعنوان التوصيل */
   selectAsDelivery?: boolean;
   onSaved?: (addressId: string) => void;
+  layout?: 'modal' | 'scroll';
 };
 
 const fieldClass = 'h-10 border-border/70 bg-background';
@@ -98,7 +100,15 @@ function ExtraPhoneRow({
   );
 }
 
-const AddAddressDialog = ({ open, onOpenChange, language, user, selectAsDelivery = false, onSaved }: Props) => {
+const AddAddressDialog = ({
+  open,
+  onOpenChange,
+  language,
+  user,
+  selectAsDelivery = false,
+  onSaved,
+  layout = 'modal',
+}: Props) => {
   const isRtl = language === 'ar';
   const accountName = (user?.name || '').trim();
   const accountPhone = (user?.phone || '').trim();
@@ -159,47 +169,38 @@ const AddAddressDialog = ({ open, onOpenChange, language, user, selectAsDelivery
     onOpenChange(false);
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        animation="reduced"
-        className={cn(
-          'flex max-h-[min(92vh,820px)] w-[calc(100%-1.5rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl',
-          'border-border/60 shadow-2xl',
+  const headerBlock = (
+    <div
+      className={cn(
+        'shrink-0 space-y-0 border-b border-border/60 bg-muted/20 px-5 py-4 pe-12 sm:px-8',
+        isRtl ? 'text-end' : 'text-start',
+      )}
+    >
+      <div className={cn('flex w-full items-center gap-3', isRtl ? 'flex-row justify-end' : 'flex-row')}>
+        {isRtl ? (
+          <>
+            <h2 id="checkout-add-addr-title" className="text-lg font-semibold leading-tight sm:text-xl">
+              {t.title}
+            </h2>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <MapPin className="h-5 w-5" aria-hidden />
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <MapPin className="h-5 w-5" aria-hidden />
+            </span>
+            <h2 id="checkout-add-addr-title" className="text-lg font-semibold leading-tight sm:text-xl">
+              {t.title}
+            </h2>
+          </>
         )}
-        dir={isRtl ? 'rtl' : 'ltr'}
-        lang={isRtl ? 'ar' : 'en'}
-      >
-        <DialogHeader
-          className={cn(
-            'shrink-0 space-y-0 border-b border-border/60 bg-muted/20 px-5 py-4 sm:px-8',
-            isRtl ? 'text-end' : 'text-start',
-          )}
-        >
-          <div
-            className={cn(
-              'flex w-full items-center gap-3 pe-8',
-              isRtl ? 'flex-row justify-end' : 'flex-row',
-            )}
-          >
-            {isRtl ? (
-              <>
-                <DialogTitle className="text-lg font-semibold leading-tight sm:text-xl">{t.title}</DialogTitle>
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <MapPin className="h-5 w-5" aria-hidden />
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <MapPin className="h-5 w-5" aria-hidden />
-                </span>
-                <DialogTitle className="text-lg font-semibold leading-tight sm:text-xl">{t.title}</DialogTitle>
-              </>
-            )}
-          </div>
-        </DialogHeader>
+      </div>
+    </div>
+  );
 
+  const formBlock = (
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-5 sm:px-8 sm:py-6">
             <FormSection title={t.account} description={t.accountHint} icon={User}>
@@ -370,6 +371,76 @@ const AddAddressDialog = ({ open, onOpenChange, language, user, selectAsDelivery
             </Button>
           </div>
         </form>
+  );
+
+  const panelInner = (
+    <div
+      className={cn(
+        'flex max-h-[min(92vh,820px)] w-full flex-col gap-0 overflow-hidden',
+        layout === 'scroll' ? 'max-w-3xl' : '',
+      )}
+      dir={isRtl ? 'rtl' : 'ltr'}
+      lang={isRtl ? 'ar' : 'en'}
+    >
+      {headerBlock}
+      {formBlock}
+    </div>
+  );
+
+  if (layout === 'scroll') {
+    return (
+      <CheckoutScrollPanel
+        open={open}
+        onOpenChange={onOpenChange}
+        labelledBy="checkout-add-addr-title"
+        panelClassName="max-w-3xl"
+      >
+        {panelInner}
+      </CheckoutScrollPanel>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        animation="reduced"
+        className={cn(
+          'flex max-h-[min(92vh,820px)] w-[calc(100%-1.5rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:rounded-2xl',
+          'border-border/60 shadow-2xl',
+        )}
+        dir={isRtl ? 'rtl' : 'ltr'}
+        lang={isRtl ? 'ar' : 'en'}
+      >
+        <DialogHeader
+          className={cn(
+            'shrink-0 space-y-0 border-b border-border/60 bg-muted/20 px-5 py-4 sm:px-8',
+            isRtl ? 'text-end' : 'text-start',
+          )}
+        >
+          <div
+            className={cn(
+              'flex w-full items-center gap-3 pe-8',
+              isRtl ? 'flex-row justify-end' : 'flex-row',
+            )}
+          >
+            {isRtl ? (
+              <>
+                <DialogTitle className="text-lg font-semibold leading-tight sm:text-xl">{t.title}</DialogTitle>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  <MapPin className="h-5 w-5" aria-hidden />
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  <MapPin className="h-5 w-5" aria-hidden />
+                </span>
+                <DialogTitle className="text-lg font-semibold leading-tight sm:text-xl">{t.title}</DialogTitle>
+              </>
+            )}
+          </div>
+        </DialogHeader>
+        {formBlock}
       </DialogContent>
     </Dialog>
   );

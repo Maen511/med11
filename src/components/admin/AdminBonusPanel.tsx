@@ -25,6 +25,8 @@ import {
   writeSectionBonusConfig,
   readLastUsedSectionBonusConfig,
   restoreLastUsedSectionBonusConfig,
+  writeLastUsedSectionBonusConfig,
+  clearLastUsedSectionBonusConfig,
   SECTION_BONUS_CHANGED,
   sectionBonusLabels,
   cloneSectionBonusConfig,
@@ -88,6 +90,7 @@ const AdminBonusPanel = ({ language }: Props) => {
   const [lastUsed, setLastUsed] = useState(() => readLastUsedSectionBonusConfig());
   const [sections, setSections] = useState(() => getCatalogSections());
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogSource, setDialogSource] = useState<'current' | 'lastUsed'>('current');
   const [draft, setDraft] = useState<SectionBonusConfig>(() => cloneSectionBonusConfig(readSectionBonusConfig()));
   const [saveBusy, setSaveBusy] = useState(false);
 
@@ -136,6 +139,11 @@ const AdminBonusPanel = ({ language }: Props) => {
           lastUsedEmpty: 'لا يوجد بونص سابق محفوظ بعد.',
           lastUsedAt: 'آخر استخدام',
           restore: 'إعادة الاستخدام',
+          editLastUsed: 'تعديل',
+          deleteLastUsed: 'حذف',
+          deletedLastUsed: 'تم حذف آخر بونص محفوظ',
+          lastUsedDialogTitle: 'تعديل آخر بونص محفوظ',
+          lastUsedDialogDesc: 'عدّل الإعداد المحفوظ ثم احفظ لتفعيله في المتجر وتحديث النسخة المحفوظة.',
           restored: 'تم تفعيل آخر بونص محفوظ',
           restoreFail: 'لا يوجد بونص سابق',
           enabled: 'تفعيل نظام البونص',
@@ -158,6 +166,7 @@ const AdminBonusPanel = ({ language }: Props) => {
           cancel: 'إلغاء',
           saving: 'جارٍ الحفظ…',
           saved: 'تم حفظ البونص',
+          disabled: 'تم إيقاف البونص',
           saveFail: 'تعذر الحفظ',
           needTrack: 'فعّل بونص الحبة أو البوكس على الأقل.',
           noSection: 'اختر قسماً',
@@ -179,6 +188,11 @@ const AdminBonusPanel = ({ language }: Props) => {
           lastUsedEmpty: 'No previous bonus saved yet.',
           lastUsedAt: 'Last used',
           restore: 'Use again',
+          editLastUsed: 'Edit',
+          deleteLastUsed: 'Delete',
+          deletedLastUsed: 'Saved last bonus removed',
+          lastUsedDialogTitle: 'Edit last used bonus',
+          lastUsedDialogDesc: 'Change the saved setup, then save to apply it in the store and update the snapshot.',
           restored: 'Last saved bonus is active again',
           restoreFail: 'No previous bonus to restore',
           enabled: 'Enable bonus system',
@@ -201,6 +215,7 @@ const AdminBonusPanel = ({ language }: Props) => {
           cancel: 'Cancel',
           saving: 'Saving…',
           saved: 'Bonus saved',
+          disabled: 'Bonus disabled',
           saveFail: 'Could not save',
           needTrack: 'Enable at least unit or box bonus.',
           noSection: 'Pick a section',
@@ -214,8 +229,26 @@ const AdminBonusPanel = ({ language }: Props) => {
   };
 
   const openDialog = () => {
+    setDialogSource('current');
     setDraft(cloneSectionBonusConfig(bonusConfig));
     setDialogOpen(true);
+  };
+
+  const openLastUsedDialog = () => {
+    if (!lastUsed) return;
+    setDialogSource('lastUsed');
+    setDraft(cloneSectionBonusConfig(lastUsed.config));
+    setDialogOpen(true);
+  };
+
+  const handleDeleteLastUsed = () => {
+    if (!lastUsed) return;
+    if (clearLastUsedSectionBonusConfig()) {
+      reload();
+      toast.success(t.deletedLastUsed);
+    } else {
+      toast.error(t.saveFail);
+    }
   };
 
   const persistConfig = (next: SectionBonusConfig, closeDialog = false) => {
@@ -241,7 +274,26 @@ const AdminBonusPanel = ({ language }: Props) => {
   const handleSave = () => {
     setSaveBusy(true);
     try {
-      if (persistConfig(draft, true)) toast.success(t.saved);
+      const normalized = normalizeConfig(draft);
+      if (isInvalidEnabledState(normalized)) {
+        toast.error(t.needTrack);
+        return;
+      }
+      if (normalized.enabled && !normalized.sectionId) {
+        toast.error(t.noSection);
+        return;
+      }
+      const ok =
+        dialogSource === 'lastUsed'
+          ? writeSectionBonusConfig(normalized) && writeLastUsedSectionBonusConfig(normalized)
+          : persistConfig(normalized, false);
+      if (!ok) {
+        toast.error(t.saveFail);
+        return;
+      }
+      reload();
+      setDialogOpen(false);
+      toast.success(normalized.enabled ? t.saved : t.disabled);
     } finally {
       setSaveBusy(false);
     }
@@ -271,7 +323,7 @@ const AdminBonusPanel = ({ language }: Props) => {
       return;
     }
     if (persistConfig(next)) {
-      if (checked) toast.success(t.saved);
+      toast.success(checked ? t.saved : t.disabled);
     }
   };
 
@@ -551,10 +603,26 @@ const AdminBonusPanel = ({ language }: Props) => {
                     </li>
                   ))}
                 </ul>
-                <Button type="button" className="gap-2" onClick={handleRestore}>
-                  <History className="h-4 w-4" />
-                  {t.restore}
-                </Button>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Button type="button" className="gap-2" onClick={handleRestore}>
+                    <History className="h-4 w-4" />
+                    {t.restore}
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" className="gap-2" onClick={openLastUsedDialog}>
+                    <Pencil className="h-4 w-4" />
+                    {t.editLastUsed}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 text-destructive hover:text-destructive"
+                    onClick={handleDeleteLastUsed}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {t.deleteLastUsed}
+                  </Button>
+                </div>
               </>
             ) : (
               <p className="text-sm text-muted-foreground">{t.lastUsedEmpty}</p>
@@ -572,9 +640,11 @@ const AdminBonusPanel = ({ language }: Props) => {
           <DialogHeader className="space-y-1 border-b border-border/60 px-5 py-4 text-start sm:px-6">
             <DialogTitle className="flex items-center gap-2 text-start">
               <Gift className="h-5 w-5 text-primary" aria-hidden />
-              {t.dialogTitle}
+              {dialogSource === 'lastUsed' ? t.lastUsedDialogTitle : t.dialogTitle}
             </DialogTitle>
-            <DialogDescription className="text-start">{t.dialogDesc}</DialogDescription>
+            <DialogDescription className="text-start">
+              {dialogSource === 'lastUsed' ? t.lastUsedDialogDesc : t.dialogDesc}
+            </DialogDescription>
           </DialogHeader>
           <div className="px-5 py-4 sm:px-6">{formBody}</div>
           <DialogFooter className="gap-2 border-t border-border/60 bg-muted/15 px-5 py-4 sm:justify-end sm:px-6">

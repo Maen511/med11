@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -50,13 +50,19 @@ import { CartLineProductHeading } from '@/components/ProductSaleModeBadge';
 import { sectionBonusFreeLineLabel } from '@/lib/sectionBonus';
 import AddAddressDialog from '@/components/AddAddressDialog';
 import SelectDeliveryAddressDialog from '@/components/SelectDeliveryAddressDialog';
+import CheckoutOrderSuccess from '@/components/checkout/CheckoutOrderSuccess';
 import {
   CUSTOMER_ADDRESSES_CHANGED,
   readCustomerAddresses,
   readSelectedAddressId,
   type CustomerDeliveryAddress,
 } from '@/lib/customerAddresses';
-import { resolveStoreSectionId } from '@/lib/storeNav';
+import {
+  readLastOrderStorePath,
+  saveLastOrderStorePath,
+  storeProductsPath,
+  storeProductsPathFromCart,
+} from '@/lib/storeNav';
 import PromoCodeInput from '@/components/PromoCodeInput';
 import {
   recordInfluencerCodeUse,
@@ -238,7 +244,7 @@ const Checkout: React.FC = () => {
   const GUEST_SELECTED_ADDRESS_KEY = 'med-selected-address:guest';
   const { language, setLanguage } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
-  const { items, clearCart, addToCart, updateQuantity, removeFromCart } = useCart();
+  const { items, clearCart, addToCart, updateQuantity, removeFromCart, setCartOpen } = useCart();
   const { user, canAccessCatalog, grantedSectionIds } = useAuth();
   const { mergedSections } = useMergedCatalog();
   const navigate = useNavigate();
@@ -254,6 +260,9 @@ const Checkout: React.FC = () => {
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [addressPickerOpen, setAddressPickerOpen] = useState(false);
   const [confirmOrderOpen, setConfirmOrderOpen] = useState(false);
+  const [orderPlacedSuccess, setOrderPlacedSuccess] = useState(false);
+  const [postOrderReturnPath, setPostOrderReturnPath] = useState('/');
+  const orderRedirectDoneRef = useRef(false);
   const [wishlistTick, setWishlistTick] = useState(0);
   const [lastPurchaseTick, setLastPurchaseTick] = useState(0);
   const [appliedPromo, setAppliedPromo] = useState<AppliedInfluencerCode | null>(null);
@@ -447,14 +456,45 @@ const Checkout: React.FC = () => {
     } catch {}
   };
 
+  const resolveStoreReturnPath = useCallback(() => {
+    const fallback = storeProductsPath(grantedSectionIds, { catalogUnlocked: canAccessCatalog });
+    const saved = postOrderReturnPath || readLastOrderStorePath() || fallback;
+    if (saved.startsWith('/products/')) return saved;
+    return fallback.startsWith('/products/') ? fallback : '/';
+  }, [postOrderReturnPath, grantedSectionIds, canAccessCatalog]);
+
+  const continueAfterOrderSuccess = useCallback(() => {
+    if (orderRedirectDoneRef.current) return;
+    orderRedirectDoneRef.current = true;
+    setOrderPlacedSuccess(false);
+    setCartOpen(false);
+    navigate(resolveStoreReturnPath(), { replace: true });
+  }, [navigate, resolveStoreReturnPath, setCartOpen]);
+
+  useEffect(() => {
+    if (!orderPlacedSuccess) {
+      orderRedirectDoneRef.current = false;
+      return;
+    }
+    const timer = window.setTimeout(() => continueAfterOrderSuccess(), 2800);
+    return () => window.clearTimeout(timer);
+  }, [orderPlacedSuccess, continueAfterOrderSuccess]);
+
   const finalizeOrder = () => {
-    toast.success(texts[language].orderSuccess);
+    const returnPath = storeProductsPathFromCart(items, grantedSectionIds, {
+      catalogUnlocked: canAccessCatalog,
+    });
+    setPostOrderReturnPath(returnPath);
+    saveLastOrderStorePath(returnPath);
+    orderRedirectDoneRef.current = false;
     saveInvoice();
     recordOrder();
     clearCart();
     setAppliedPromo(null);
-    const storeSectionId = resolveStoreSectionId(grantedSectionIds, { catalogUnlocked: canAccessCatalog });
-    navigate(storeSectionId ? `/products/${storeSectionId}` : '/', { replace: true });
+    setCartOpen(false);
+    setConfirmOrderOpen(false);
+    setOrderPlacedSuccess(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const recordOrder = () => {
@@ -499,8 +539,11 @@ const Checkout: React.FC = () => {
       orderSummary: 'Order Summary',
       deliveryInfo: 'Account Information',
       paymentNote: 'Payment: cash on delivery when your order arrives',
-      confirmTitle: 'Confirm your order?',
-      confirmDesc: 'Review the summary below. After confirming, your order will be placed.',
+      confirmTitle: 'Are you sure you want to purchase?',
+      confirmDesc: 'Your order will be registered after you confirm.',
+      orderSuccessTitle: 'Order placed',
+      orderSuccessSubtitle: 'Thank you. Your order has been registered — returning you to the store…',
+      continueShopping: 'Continue shopping',
       confirmItems: 'Items',
       confirmTotal: 'Total',
       confirmDeliverTo: 'Deliver to',
@@ -543,8 +586,11 @@ const Checkout: React.FC = () => {
       orderSummary: 'ملخص الطلب',
       deliveryInfo: 'معلومات الحساب',
       paymentNote: 'الدفع: عند الاستلام نقداً عند وصول الطلب',
-      confirmTitle: 'تأكيد الطلب؟',
-      confirmDesc: 'راجع الملخص أدناه. بعد التأكيد سيتم تسجيل طلبك.',
+      confirmTitle: 'هل أنت متأكد من الشراء؟',
+      confirmDesc: 'سيتم تسجيل طلبك بعد التأكيد.',
+      orderSuccessTitle: 'تم الطلب',
+      orderSuccessSubtitle: 'شكراً لك. تم تسجيل طلبك — سنعيدك للمتجر الآن…',
+      continueShopping: 'متابعة التسوق',
       confirmItems: 'المنتجات',
       confirmTotal: 'المجموع',
       confirmDeliverTo: 'التوصيل إلى',
@@ -592,8 +638,7 @@ const Checkout: React.FC = () => {
   // No validation needed beyond having items
   const validateForm = () => true;
 
-  const handleSubmit = (e?: React.FormEvent) => {
-    e?.preventDefault();
+  const openOrderConfirm = () => {
     if (!hasSelectedAddress) {
       toast.error(texts[language].selectAddressRequired);
       setAddressDialogOpen(true);
@@ -608,7 +653,6 @@ const Checkout: React.FC = () => {
     setIsLoading(true);
     try {
       finalizeOrder();
-      setConfirmOrderOpen(false);
     } finally {
       setIsLoading(false);
     }
@@ -616,10 +660,14 @@ const Checkout: React.FC = () => {
 
   const isRtl = language === 'ar';
 
-  const chosenAddress = useMemo(
-    () => addresses.find((a) => a.id === selectedAddressId),
-    [addresses, selectedAddressId],
-  );
+  const chosenAddress = useMemo(() => {
+    const selKey = user?.email ? `med-selected-address:${user.email}` : GUEST_SELECTED_ADDRESS_KEY;
+    let effectiveId = selectedAddressId;
+    try {
+      effectiveId = (selKey && localStorage.getItem(selKey)) || selectedAddressId;
+    } catch {}
+    return addresses.find((a) => a.id === effectiveId);
+  }, [addresses, selectedAddressId, user?.email]);
 
   const openAddressPicker = () => setAddressPickerOpen(true);
 
@@ -725,7 +773,7 @@ const Checkout: React.FC = () => {
     toast.success(language === 'ar' ? 'تمت الإضافة للسلة' : 'Added to cart');
   };
 
-  if (items.length === 0) {
+  if (items.length === 0 && !orderPlacedSuccess) {
     return (
       <div className="min-h-screen bg-background" dir={isRtl ? 'rtl' : 'ltr'}>
         <Header language={language} onLanguageChange={setLanguage} />
@@ -751,8 +799,30 @@ const Checkout: React.FC = () => {
   return (
     <div className="min-h-screen bg-background" dir={isRtl ? 'rtl' : 'ltr'} lang={isRtl ? 'ar' : 'en'}>
       <Header language={language} onLanguageChange={setLanguage} isStatic />
-      
-      <div className="container mx-auto max-w-6xl px-4 pb-10 pt-20 sm:pt-24">
+
+      {orderPlacedSuccess ? (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/90 px-4 backdrop-blur-md"
+          role="status"
+          aria-live="polite"
+        >
+          <CheckoutOrderSuccess
+            language={language}
+            title={texts[language].orderSuccessTitle}
+            subtitle={texts[language].orderSuccessSubtitle}
+            continueLabel={texts[language].continueShopping}
+            onContinue={continueAfterOrderSuccess}
+          />
+        </div>
+      ) : null}
+
+      <div
+        className={cn(
+          'container relative mx-auto max-w-6xl px-4 pb-10 pt-20 sm:pt-24',
+          orderPlacedSuccess && 'pointer-events-none select-none opacity-0',
+        )}
+        aria-hidden={orderPlacedSuccess}
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -778,14 +848,13 @@ const Checkout: React.FC = () => {
         </motion.div>
 
         <div className="checkout-layout grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
-          {/* Delivery + pay — first on phone, sidebar on desktop */}
           <motion.aside
             initial={{ opacity: 0, x: isRtl ? -24 : 24 }}
             animate={{ opacity: 1, x: 0 }}
             className="checkout-sidebar order-1 lg:order-2 lg:col-span-1"
           >
-            <div className="checkout-sidebar__inner space-y-4 lg:sticky lg:top-24">
-              {(!hasSelectedAddress) && (
+            <div className="checkout-sidebar__inner space-y-4">
+              {!hasSelectedAddress ? (
                 <Card className="border-primary/30 shadow-md">
                   <CardContent className="space-y-3 p-4">
                     <div className="flex items-start gap-2 text-start">
@@ -806,66 +875,64 @@ const Checkout: React.FC = () => {
                     </Button>
                   </CardContent>
                 </Card>
+              ) : (
+                <Card className="border-primary/30 shadow-md">
+                  <CardContent className="space-y-4 p-4 sm:p-5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-start gap-2 text-start">
+                        <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {language === 'en' ? 'Delivery address' : 'عنوان التوصيل'}
+                          </p>
+                          <p className="mt-1 text-sm font-semibold leading-snug">
+                            {chosenAddress?.label || chosenAddress?.details || ''}
+                            {chosenAddress?.city ? ` • ${chosenAddress.city}` : ''}
+                          </p>
+                          {chosenAddress?.details ? (
+                            <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{chosenAddress.details}</p>
+                          ) : null}
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 shrink-0 gap-1 px-2 text-xs"
+                        onClick={openAddressPicker}
+                      >
+                        <Pencil className="h-3.5 w-3.5" aria-hidden />
+                        {texts[language].changeAddress}
+                      </Button>
+                    </div>
+                    {orderPricing.discountAmount > 0 ? (
+                      <div className="flex items-center justify-between text-sm text-emerald-700 dark:text-emerald-300">
+                        <span>{language === 'ar' ? 'الخصم' : 'Discount'}</span>
+                        <span className="tabular-nums">−{formatNumber(orderPricing.discountAmount)}</span>
+                      </div>
+                    ) : null}
+                    <div className="flex items-center justify-between border-t border-border/50 pt-3">
+                      <span className="text-sm text-muted-foreground">
+                        {language === 'en' ? 'Order total' : 'المجموع'}
+                      </span>
+                      <span className="text-xl font-bold text-primary tabular-nums">
+                        {formatNumber(orderPricing.total)}{' '}
+                        <CurrencyIcon className="inline-block h-5 w-5 align-[-2px]" title={texts[language].currency} />
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground text-start">{texts[language].paymentNote}</p>
+                    <Button
+                      type="button"
+                      onClick={openOrderConfirm}
+                      className="btn-primary h-12 w-full text-base font-semibold"
+                      size="lg"
+                      disabled={isLoading || !hasSelectedAddress}
+                    >
+                      {isLoading ? texts[language].processing : texts[language].placeOrder}
+                    </Button>
+                  </CardContent>
+                </Card>
               )}
-              {hasSelectedAddress &&
-                (() => {
-                  const selKey = user?.email ? `med-selected-address:${user.email}` : GUEST_SELECTED_ADDRESS_KEY;
-                  const currentSelected = selKey ? localStorage.getItem(selKey) || selectedAddressId : selectedAddressId;
-                  const chosen = addresses.find((a) => a.id === currentSelected);
-                  const total = orderPricing.total;
-                  return (
-                    <Card className="border-primary/30 shadow-md">
-                      <CardContent className="space-y-4 p-4 sm:p-5">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex min-w-0 items-start gap-2 text-start">
-                            <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
-                            <div className="min-w-0">
-                              <p className="text-xs font-medium text-muted-foreground">
-                                {language === 'en' ? 'Delivery address' : 'عنوان التوصيل'}
-                              </p>
-                              <p className="mt-1 text-sm font-semibold leading-snug">
-                                {chosen?.label || chosen?.details || ''}
-                                {chosen?.city ? ` • ${chosen.city}` : ''}
-                              </p>
-                              {chosen?.details ? (
-                                <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{chosen.details}</p>
-                              ) : null}
-                            </div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 shrink-0 gap-1 px-2 text-xs"
-                            onClick={openAddressPicker}
-                          >
-                            <Pencil className="h-3.5 w-3.5" aria-hidden />
-                            {texts[language].changeAddress}
-                          </Button>
-                        </div>
-                        <div className="flex items-center justify-between border-t border-border/50 pt-3">
-                          <span className="text-sm text-muted-foreground">
-                            {language === 'en' ? 'Order total' : 'المجموع'}
-                          </span>
-                          <span className="text-xl font-bold text-primary">
-                            {formatNumber(total)}{' '}
-                            <CurrencyIcon className="inline-block h-5 w-5 align-[-2px]" title={texts[language].currency} />
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground text-start">{texts[language].paymentNote}</p>
-                        <Button
-                          type="button"
-                          onClick={() => handleSubmit()}
-                          className="btn-primary h-12 w-full text-base font-semibold"
-                          size="lg"
-                          disabled={isLoading || !hasSelectedAddress}
-                        >
-                          {isLoading ? texts[language].processing : texts[language].placeOrder}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  );
-                })()}
             </div>
           </motion.aside>
 
@@ -1149,86 +1216,78 @@ const Checkout: React.FC = () => {
             </div>
           </motion.div>
         </div>
-      </div>
-      <Dialog open={confirmOrderOpen} onOpenChange={setConfirmOrderOpen}>
-        <DialogContent className="max-w-md gap-0 p-0" dir={isRtl ? 'rtl' : 'ltr'} animation="reduced">
-          <DialogHeader className="space-y-2 border-b border-border/60 px-5 py-4 text-start sm:text-start">
-            <DialogTitle>{texts[language].confirmTitle}</DialogTitle>
-            <DialogDescription>{texts[language].confirmDesc}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 px-5 py-4 text-start">
-            {chosenAddress ? (
-              <div className="rounded-lg border border-border/60 bg-muted/30 p-3">
-                <p className="text-xs font-medium text-muted-foreground">{texts[language].confirmDeliverTo}</p>
-                <p className="mt-1 text-sm font-semibold">
-                  {chosenAddress.label}
-                  {chosenAddress.city ? ` • ${chosenAddress.city}` : ''}
-                </p>
-                {chosenAddress.details ? (
-                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{chosenAddress.details}</p>
-                ) : null}
-              </div>
-            ) : null}
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{texts[language].confirmItems}</span>
-              <span className="font-medium tabular-nums">
-                {items.reduce((n, i) => n + i.quantity, 0)} {texts[language].items}
-              </span>
-            </div>
-            {orderPricing.discountAmount > 0 ? (
-              <div className="flex items-center justify-between text-sm text-emerald-700 dark:text-emerald-300">
-                <span>{language === 'ar' ? 'الخصم' : 'Discount'}</span>
-                <span className="tabular-nums">−{formatNumber(orderPricing.discountAmount)}</span>
-              </div>
-            ) : null}
-            <div className="flex items-center justify-between border-t border-border/60 pt-3">
-              <span className="font-medium">{texts[language].confirmTotal}</span>
-              <span className="text-lg font-bold text-primary tabular-nums">
-                {formatNumber(orderPricing.total)}{' '}
-                <CurrencyIcon className="inline-block h-4 w-4 align-[-2px]" title={texts[language].currency} />
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground">{texts[language].paymentNote}</p>
-          </div>
-          <DialogFooter className="flex-col-reverse gap-2 border-t border-border/60 px-5 py-4 sm:flex-row sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setConfirmOrderOpen(false)}
-              disabled={isLoading}
-            >
-              {texts[language].confirmCancel}
-            </Button>
-            <Button type="button" className="btn-primary gap-2" onClick={() => void confirmPlaceOrder()} disabled={isLoading}>
-              {isLoading ? texts[language].processing : texts[language].confirmSubmit}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
-      <SelectDeliveryAddressDialog
-        open={addressPickerOpen}
-        onOpenChange={setAddressPickerOpen}
-        language={language}
-        user={user}
-        selectedId={selectedAddressId}
-        onSelected={(id) => {
-          setSelectedAddressId(id);
-          refreshAddresses();
-        }}
-        onAddNew={() => setAddressDialogOpen(true)}
-      />
-      <AddAddressDialog
-        open={addressDialogOpen}
-        onOpenChange={setAddressDialogOpen}
-        language={language}
-        user={user}
-        selectAsDelivery
-        onSaved={(id) => {
-          refreshAddresses();
-          setSelectedAddressId(id);
-        }}
-      />
+        <Dialog open={confirmOrderOpen} onOpenChange={setConfirmOrderOpen}>
+          <DialogContent className="max-w-md gap-0 p-0" dir={isRtl ? 'rtl' : 'ltr'} animation="reduced">
+            <DialogHeader className="space-y-2 border-b border-border/60 px-5 py-4 text-start">
+              <DialogTitle>{texts[language].confirmTitle}</DialogTitle>
+              <DialogDescription>{texts[language].confirmDesc}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 px-5 py-4 text-start text-sm">
+              {chosenAddress ? (
+                <div className="rounded-lg border border-border/60 bg-muted/30 p-3">
+                  <p className="text-xs font-medium text-muted-foreground">{texts[language].confirmDeliverTo}</p>
+                  <p className="mt-1 font-semibold">
+                    {chosenAddress.label}
+                    {chosenAddress.city ? ` • ${chosenAddress.city}` : ''}
+                  </p>
+                </div>
+              ) : null}
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">{texts[language].confirmTotal}</span>
+                <span className="text-lg font-bold text-primary tabular-nums">
+                  {formatNumber(orderPricing.total)}{' '}
+                  <CurrencyIcon className="inline-block h-4 w-4 align-[-2px]" title={texts[language].currency} />
+                </span>
+              </div>
+            </div>
+            <DialogFooter className="flex-col-reverse gap-2 border-t border-border/60 px-5 py-4 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setConfirmOrderOpen(false)}
+                disabled={isLoading}
+              >
+                {texts[language].confirmCancel}
+              </Button>
+              <Button
+                type="button"
+                className="btn-primary gap-2"
+                onClick={() => void confirmPlaceOrder()}
+                disabled={isLoading}
+              >
+                {isLoading ? texts[language].processing : texts[language].confirmSubmit}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <SelectDeliveryAddressDialog
+          layout="scroll"
+          open={addressPickerOpen}
+          onOpenChange={setAddressPickerOpen}
+          language={language}
+          user={user}
+          selectedId={selectedAddressId}
+          onSelected={(id) => {
+            setSelectedAddressId(id);
+            refreshAddresses();
+          }}
+          onAddNew={() => setAddressDialogOpen(true)}
+        />
+        <AddAddressDialog
+          layout="scroll"
+          open={addressDialogOpen}
+          onOpenChange={setAddressDialogOpen}
+          language={language}
+          user={user}
+          selectAsDelivery
+          onSaved={(id) => {
+            refreshAddresses();
+            setSelectedAddressId(id);
+          }}
+        />
+      </div>
 
       <Footer />
     </div>

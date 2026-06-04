@@ -241,6 +241,26 @@ export function restoreLastUsedSectionBonusConfig(): boolean {
   return writeSectionBonusConfig({ ...cloneSectionBonusConfig(last.config), enabled: true });
 }
 
+export function writeLastUsedSectionBonusConfig(config: SectionBonusConfig): boolean {
+  try {
+    saveLastUsedSectionBonus(config);
+    window.dispatchEvent(new CustomEvent(SECTION_BONUS_CHANGED));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function clearLastUsedSectionBonusConfig(): boolean {
+  try {
+    localStorage.removeItem(SECTION_BONUS_LAST_USED_KEY);
+    window.dispatchEvent(new CustomEvent(SECTION_BONUS_CHANGED));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function writeSectionBonusConfig(config: SectionBonusConfig): boolean {
   try {
     const previous = readSectionBonusConfig();
